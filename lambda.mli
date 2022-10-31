@@ -5,7 +5,7 @@ type ty =
   | TyArr of ty * ty
 ;;
 
-type context =
+type tcontext =
   (string * ty) list
 ;;
 
@@ -24,9 +24,22 @@ type term =
   | TmFix of term
 ;;
 
-val emptyctx : context;;
-val addbinding : context -> string -> ty -> context;;
-val getbinding : context -> string -> ty;;
+type vcontext =
+  (string * ty) list
+;;
+
+type command = 
+    Eval of term
+  | Bind of string * term
+;;
+
+val emptytctx : context;;
+val addtbinding : context -> string -> ty -> context;;
+val gettbinding : context -> string -> ty;;
+
+val emptyvctx : context;;
+val addvbinding : context -> string -> ty -> context;;
+val getvbinding : context -> string -> ty;;
 
 val string_of_ty : ty -> string;;
 exception Type_error of string;;

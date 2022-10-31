@@ -342,11 +342,37 @@ let rec eval1 tm = match tm with
       raise NoRuleApplies
 ;;
 
-let rec eval tm =
+let apply_ctx vctx tm =
+  let rec aux vl = function
+      TmTrue ->
+          TmTrue
+    | TmFalse
+    | TmVar s -> if List.mem s vl then TmVar s else getvbinfing vcttx s
+  in
+    aux [] tm
+;
+
+let rec eval vctx tm =
   try
-    let tm' = eval1 tm in
-    eval tm'
+    let tm' = eval1 vctx tm in
+    eval vctx tm'
   with
-    NoRuleApplies -> tm
+    NoRuleApplies -> apply_ctx vctx tm
 ;;
+
+let execute (vctx, tctx) = function
+    Eval tm ->
+      let tyTm = typeof tctx tm in
+      let tm' = eval vctx tm in 
+      print_endline ("- : " ^ string_of_ty tyTm
+                     ^ " = " ^string_of_term tm'');
+      (vctx, tctx)
+
+  | Bind (s, tm) ->
+      let tyTm = typeof tctx tm in
+      let tm' = eval vctx tm in
+      print_endline (s ^ " : " ^ string_of_ty tyTm
+                     ^ " = " ^string_of_term tm'');
+      (addvbinding vctx stm', addtbinding tctx s tyTm)
+
 

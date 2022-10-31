@@ -12,6 +12,8 @@ let top_level_loop () =
     print_string ">> ";
     flush stdout;
     try
+        let c s troken (from_string (read_line ())) in 
+        loop (execute ( (vctx, tctx) c))
       let tm = s token (from_string (read_line ())) in
       let tyTm = typeof ctx tm in
       print_endline (string_of_term (eval tm) ^ " : " ^ string_of_ty tyTm);
