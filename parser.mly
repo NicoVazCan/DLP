@@ -76,6 +76,8 @@ atomicTerm :
             0 -> TmZero
           | n -> TmSucc (f (n-1))
         in f $1 }
+  | STRINGL
+      { $}
 
 ty :
     atomicTy
