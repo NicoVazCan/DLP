@@ -17,6 +17,8 @@
 %token IN
 %token BOOL
 %token NAT
+%token STRING
+%token STRCAT
 
 %token LPAREN
 %token RPAREN
@@ -28,6 +30,7 @@
 
 %token <int> INTV
 %token <string> STRINGV
+%token <string> STRINGL
 
 %start s
 %type <Lambda.term> s
@@ -59,6 +62,8 @@ appTerm :
       { TmPred $2 }
   | ISZERO atomicTerm
       { TmIsZero $2 }
+  | appTerm STRCAT atomicTerm
+      { TmStrCat ($1, $3) }
   | appTerm atomicTerm
       { TmApp ($1, $2) }
 
@@ -77,7 +82,7 @@ atomicTerm :
           | n -> TmSucc (f (n-1))
         in f $1 }
   | STRINGL
-      { $}
+      { TmStr $1 }
 
 ty :
     atomicTy
@@ -92,4 +97,6 @@ atomicTy :
       { TyBool }
   | NAT
       { TyNat }
+  | STRING
+      { TyStr }
 
