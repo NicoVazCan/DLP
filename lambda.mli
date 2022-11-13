@@ -25,7 +25,7 @@ type term =
 ;;
 
 type vcontext =
-  (string * ty) list
+  (string * term) list
 ;;
 
 type command = 
@@ -33,19 +33,21 @@ type command =
   | Bind of string * term
 ;;
 
-val emptytctx : context;;
-val addtbinding : context -> string -> ty -> context;;
-val gettbinding : context -> string -> ty;;
+val emptytctx : tcontext;;
+val addtbinding : tcontext -> string -> ty -> tcontext;;
+val gettbinding : tcontext -> string -> ty;;
 
-val emptyvctx : context;;
-val addvbinding : context -> string -> ty -> context;;
-val getvbinding : context -> string -> ty;;
+val emptyvctx : vcontext;;
+val addvbinding : vcontext -> string -> term -> vcontext;;
+val getvbinding : vcontext -> string -> term;;
 
 val string_of_ty : ty -> string;;
 exception Type_error of string;;
-val typeof : context -> term -> ty;;
+val typeof : tcontext -> term -> ty;;
 
 val string_of_term : term -> string;;
 exception NoRuleApplies;;
-val eval : term -> term;;
+val eval : vcontext -> term -> term;;
+
+val execute: vcontext * tcontext -> command -> vcontext * tcontext;;
 

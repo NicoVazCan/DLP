@@ -7,7 +7,7 @@ type ty =
   | TyArr of ty * ty
 ;;
 
-type context =
+type tcontext =
   (string * ty) list
 ;;
 
@@ -26,19 +26,41 @@ type term =
   | TmFix of term
 ;;
 
+type vcontext =
+  (string * term) list
+;;
+
+type command = 
+    Eval of term
+  | Bind of string * term
+;;
+
 
 (* CONTEXT MANAGEMENT *)
 
-let emptyctx =
+let emptytctx =
   []
 ;;
 
-let addbinding ctx x bind =
-  (x, bind) :: ctx
+let addtbinding tctx x bind =
+  (x, bind) :: tctx
 ;;
 
-let getbinding ctx x =
-  List.assoc x ctx
+let gettbinding tctx x =
+  List.assoc x tctx
+;;
+
+
+let emptyvctx =
+  []
+;;
+
+let addvbinding vctx x bind =
+  (x, bind) :: vctx
+;;
+
+let getvbinding vctx x =
+  List.assoc x vctx
 ;;
 
 
@@ -56,7 +78,7 @@ let rec string_of_ty ty = match ty with
 exception Type_error of string
 ;;
 
-let rec typeof ctx tm = match tm with
+let rec typeof tctx tm = match tm with
     (* T-True *)
     TmTrue ->
       TyBool
@@ -67,9 +89,9 @@ let rec typeof ctx tm = match tm with
 
     (* T-If *)
   | TmIf (t1, t2, t3) ->
-      if typeof ctx t1 = TyBool then
-        let tyT2 = typeof ctx t2 in
-        if typeof ctx t3 = tyT2 then tyT2
+      if typeof tctx t1 = TyBool then
+        let tyT2 = typeof tctx t2 in
+        if typeof tctx t3 = tyT2 then tyT2
         else raise (Type_error "arms of conditional have different types")
       else
         raise (Type_error "guard of conditional not a boolean")
@@ -80,34 +102,34 @@ let rec typeof ctx tm = match tm with
 
     (* T-Succ *)
   | TmSucc t1 ->
-      if typeof ctx t1 = TyNat then TyNat
+      if typeof tctx t1 = TyNat then TyNat
       else raise (Type_error "argument of succ is not a number")
 
     (* T-Pred *)
   | TmPred t1 ->
-      if typeof ctx t1 = TyNat then TyNat
+      if typeof tctx t1 = TyNat then TyNat
       else raise (Type_error "argument of pred is not a number")
 
     (* T-Iszero *)
   | TmIsZero t1 ->
-      if typeof ctx t1 = TyNat then TyBool
+      if typeof tctx t1 = TyNat then TyBool
       else raise (Type_error "argument of iszero is not a number")
 
     (* T-Var *)
   | TmVar x ->
-      (try getbinding ctx x with
+      (try gettbinding tctx x with
        _ -> raise (Type_error ("no binding type for variable " ^ x)))
 
     (* T-Abs *)
   | TmAbs (x, tyT1, t2) ->
-      let ctx' = addbinding ctx x tyT1 in
-      let tyT2 = typeof ctx' t2 in
+      let tctx' = addtbinding tctx x tyT1 in
+      let tyT2 = typeof tctx' t2 in
       TyArr (tyT1, tyT2)
 
     (* T-App *)
   | TmApp (t1, t2) ->
-      let tyT1 = typeof ctx t1 in
-      let tyT2 = typeof ctx t2 in
+      let tyT1 = typeof tctx t1 in
+      let tyT2 = typeof tctx t2 in
       (match tyT1 with
            TyArr (tyT11, tyT12) ->
              if tyT2 = tyT11 then tyT12
@@ -116,13 +138,13 @@ let rec typeof ctx tm = match tm with
 
     (* T-Let *)
   | TmLetIn (x, t1, t2) ->
-      let tyT1 = typeof ctx t1 in
-      let ctx' = addbinding ctx x tyT1 in
-      typeof ctx' t2
+      let tyT1 = typeof tctx t1 in
+      let tctx' = addtbinding tctx x tyT1 in
+      typeof tctx' t2
 
     (* T-Fix *)
   | TmFix t1 ->
-      let tyT1 = typeof ctx t1 in
+      let tyT1 = typeof tctx t1 in
       (match tyT1 with
           TyArr (tyT11, tyT12) ->
             if tyT11 = tyT12 then tyT12
@@ -344,17 +366,31 @@ let rec eval1 tm = match tm with
 
 let apply_ctx vctx tm =
   let rec aux vl = function
-      TmTrue ->
-          TmTrue
-    | TmFalse
-    | TmVar s -> if List.mem s vl then TmVar s else getvbinfing vcttx s
+    (*  TmIf (t1, t2, t3) ->
+        eval1 (TmIf (aux vl t1, aux vl t2, aux vl t3))
+    | TmSucc t1 ->
+        eval1 (TmSucc (aux vl t1))
+    | TmPred t1 ->
+        eval1 (TmPred (aux vl t1))
+    | TmIsZero t1 ->
+        eval1 (TmIsZero (aux vl t1))*)
+    | TmVar s ->
+        if List.mem s vl then TmVar s
+        else getvbinding vctx s
+    (*| TmApp (t1, t2) ->
+        eval1 (TmApp (t1, (aux vl t2)))
+    | TmLetIn (s, t1, t2) ->
+        
+    | TmFix t1 ->
+        eval1 (TmFix (aux vl t1))*)
+    | tm' -> print_char 'a'; tm'
   in
     aux [] tm
-;
+;;
 
 let rec eval vctx tm =
   try
-    let tm' = eval1 vctx tm in
+    let tm' = eval1 (*vctx*) tm in
     eval vctx tm'
   with
     NoRuleApplies -> apply_ctx vctx tm
@@ -365,14 +401,14 @@ let execute (vctx, tctx) = function
       let tyTm = typeof tctx tm in
       let tm' = eval vctx tm in 
       print_endline ("- : " ^ string_of_ty tyTm
-                     ^ " = " ^string_of_term tm'');
+                     ^ " = " ^ string_of_term tm');
       (vctx, tctx)
 
   | Bind (s, tm) ->
       let tyTm = typeof tctx tm in
       let tm' = eval vctx tm in
       print_endline (s ^ " : " ^ string_of_ty tyTm
-                     ^ " = " ^string_of_term tm'');
-      (addvbinding vctx stm', addtbinding tctx s tyTm)
-
+                     ^ " = " ^ string_of_term tm');
+      (addvbinding vctx s tm', addtbinding tctx s tyTm)
+;;
 

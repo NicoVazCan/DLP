@@ -30,15 +30,15 @@
 %token <string> STRINGV
 
 %start s
-%type <Lambda.comand> s
+%type <Lambda.command> s
 
 %%
 
 s :
     STRINGV EQ term EOF
-    { Bind ($1, $2)}
-    term EOF
-      { $1 }
+      { Bind ($1, $3) }
+  | term EOF
+      { Eval $1 }
 
 term :
     appTerm
@@ -78,8 +78,6 @@ atomicTerm :
             0 -> TmZero
           | n -> TmSucc (f (n-1))
         in f $1 }
-  | STRINGL
-      { $}
 
 ty :
     atomicTy
