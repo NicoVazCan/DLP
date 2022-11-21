@@ -283,7 +283,7 @@ let rec isval tm = match tm with
 exception NoRuleApplies
 ;;
 
-let rec eval1 tm = match tm with
+let rec eval1 vctx tm = match tm with
     (* E-IfTrue *)
     TmIf (TmTrue, t2, _) ->
       t2
@@ -294,12 +294,12 @@ let rec eval1 tm = match tm with
 
     (* E-If *)
   | TmIf (t1, t2, t3) ->
-      let t1' = eval1 t1 in
+      let t1' = eval1 vctx t1 in
       TmIf (t1', t2, t3)
 
     (* E-Succ *)
   | TmSucc t1 ->
-      let t1' = eval1 t1 in
+      let t1' = eval1 vctx t1 in
       TmSucc t1'
 
     (* E-PredZero *)
@@ -312,7 +312,7 @@ let rec eval1 tm = match tm with
 
     (* E-Pred *)
   | TmPred t1 ->
-      let t1' = eval1 t1 in
+      let t1' = eval1 vctx t1 in
       TmPred t1'
 
     (* E-IszeroZero *)
@@ -325,7 +325,7 @@ let rec eval1 tm = match tm with
 
     (* E-Iszero *)
   | TmIsZero t1 ->
-      let t1' = eval1 t1 in
+      let t1' = eval1 vctx t1 in
       TmIsZero t1'
 
     (* E-AppAbs *)
@@ -334,12 +334,12 @@ let rec eval1 tm = match tm with
 
     (* E-App2: evaluate argument before applying function *)
   | TmApp (v1, t2) when isval v1 ->
-      let t2' = eval1 t2 in
+      let t2' = eval1 vctx t2 in
       TmApp (v1, t2')
 
     (* E-App1: evaluate function before argument *)
   | TmApp (t1, t2) ->
-      let t1' = eval1 t1 in
+      let t1' = eval1 vctx t1 in
       TmApp (t1', t2)
 
     (* E-LetV *)
@@ -348,7 +348,7 @@ let rec eval1 tm = match tm with
 
     (* E-Let *)
   | TmLetIn(x, t1, t2) ->
-      let t1' = eval1 t1 in
+      let t1' = eval1 vctx t1 in
       TmLetIn (x, t1', t2) 
 
     (* E-FixBeta *)
@@ -357,40 +357,23 @@ let rec eval1 tm = match tm with
 
     (* E-Fix *)
   | TmFix t1 ->
-      let t1' = eval1 t1 in
+      let t1' = eval1 vctx t1 in
       TmFix t1'
+
+  | TmVar s ->
+      getvbinding vctx s
 
   | _ ->
       raise NoRuleApplies
 ;;
 
-let apply_ctx vctx tm =
-  let rec aux vl = function
-    (*  TmIf (t1, t2, t3) ->
-        eval1 (TmIf (aux vl t1, aux vl t2, aux vl t3))
-    | TmSucc t1 ->
-        eval1 (TmSucc (aux vl t1))
-    | TmPred t1 ->
-        eval1 (TmPred (aux vl t1))
-    | TmIsZero t1 ->
-        eval1 (TmIsZero (aux vl t1))*)
-    | TmVar s ->
-        if List.mem s vl then TmVar s
-        else getvbinding vctx s
-    (*| TmApp (t1, t2) ->
-        eval1 (TmApp (t1, (aux vl t2)))
-    | TmLetIn (s, t1, t2) ->
-        
-    | TmFix t1 ->
-        eval1 (TmFix (aux vl t1))*)
-    | tm' -> print_char 'a'; tm'
-  in
-    aux [] tm
+let apply_ctx ctx tm =
+  List.fold_left (fun t x -> subst x (getvbinding ctx x) t ) tm (free_vars tm)
 ;;
 
 let rec eval vctx tm =
   try
-    let tm' = eval1 (*vctx*) tm in
+    let tm' = eval1 vctx tm in
     eval vctx tm'
   with
     NoRuleApplies -> apply_ctx vctx tm
