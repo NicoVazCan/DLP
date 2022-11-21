@@ -5,6 +5,7 @@ type ty =
     TyBool
   | TyNat
   | TyArr of ty * ty
+  | TyStr
 ;;
 
 type tcontext =
@@ -24,6 +25,8 @@ type term =
   | TmApp of term * term
   | TmLetIn of string * term * term
   | TmFix of term
+  | TmStr of string
+  | TmStrCat of term * term
 ;;
 
 type vcontext =
@@ -73,6 +76,8 @@ let rec string_of_ty ty = match ty with
       "Nat"
   | TyArr (ty1, ty2) ->
       "(" ^ string_of_ty ty1 ^ ")" ^ " -> " ^ "(" ^ string_of_ty ty2 ^ ")"
+  | TyStr ->
+      "String"
 ;;
 
 exception Type_error of string
@@ -150,6 +155,17 @@ let rec typeof tctx tm = match tm with
             if tyT11 = tyT12 then tyT12
             else raise (Type_error "result of body not compatible with domain")
         | _ -> raise (Type_error "arrow type expected"))
+
+    (* T-String *)
+  | TmStr _ -> 
+      TyStr
+
+    (* T-^ *)
+  | TmStrCat (t1, t2) ->
+      if typeof ctx t1 = TyStr then
+        if typeof ctx t2 = TyStr then TyStr
+        else raise (Type_error "right argument of ^ is not a string")
+      else raise (Type_error "left argument of ^ is not a string")
 ;;
 
 
@@ -186,6 +202,10 @@ let rec string_of_term = function
       "let " ^ s ^ " = " ^ string_of_term t1 ^ " in " ^ string_of_term t2
   | TmFix t ->
       "(fix " ^ string_of_term t ^ ")"
+  | TmStr s ->
+      "\"" ^ s ^ "\""
+  | TmStrCat (t1, t2) ->
+      "(" ^ string_of_term t1 ^ ") ^ (" ^ string_of_term t2 ^ ")"
 ;;
 
 let rec ldif l1 l2 = match l1 with
@@ -223,6 +243,10 @@ let rec free_vars tm = match tm with
       lunion (ldif (free_vars t2) [s]) (free_vars t1)
   | TmFix t ->
       free_vars t
+  | TmStr s ->
+      []
+  | TmStrCat (t1, t2) ->
+      lunion (free_vars t1) (free_vars t2)
 ;;
 
 let rec fresh_name x l =
@@ -264,6 +288,10 @@ let rec subst x s tm = match tm with
                 TmLetIn (z, subst x s t1, subst x s (subst y (TmVar z) t2))
   | TmFix t ->
       TmFix (subst x s t)
+  | TmStr st ->
+      TmStr st
+  | TmStrCat (t1, t2) ->
+      TmStrCat (subst x s t1, subst x s t2)
 ;;
 
 let rec isnumericval tm = match tm with
@@ -277,6 +305,7 @@ let rec isval tm = match tm with
   | TmFalse -> true
   | TmAbs _ -> true
   | t when isnumericval t -> true
+  | TmStr _ -> true
   | _ -> false
 ;;
 
@@ -360,6 +389,19 @@ let rec eval1 vctx tm = match tm with
       let t1' = eval1 vctx t1 in
       TmFix t1'
 
+    (* E-^: base case *)
+  | TmStrCat (TmStr s1, TmStr s2) ->
+      TmStr (s1 ^ s2)
+
+    (* E-^: evaluate right argument before concat *)
+  | TmStrCat (TmStr s1, t2) -> (match eval1 t2 with
+        TmStr s2 -> TmStr (s1 ^ s2)
+      | _ -> raise NoRuleApplies)
+
+    (* E-^: evaluate left argument before concat *)
+  | TmStrCat (t1, TmStr s2) -> (match eval1 t1 with
+        TmStr s1 -> TmStr (s1 ^ s2)
+      | _ -> raise NoRuleApplies)
   | TmVar s ->
       getvbinding vctx s
 
