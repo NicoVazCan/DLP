@@ -6,6 +6,7 @@ type ty =
   | TyNat
   | TyArr of ty * ty
   | TyStr
+  | TyRcd of (string * ty) list
 ;;
 
 type tcontext =
@@ -27,6 +28,8 @@ type term =
   | TmFix of term
   | TmStr of string
   | TmStrCat of term * term
+  | TmRcd of (string * term) list
+  | TmProj of term * string
 ;;
 
 type vcontext =
@@ -67,7 +70,14 @@ let getvbinding vctx x =
 ;;
 
 
+
 (* TYPE MANAGEMENT (TYPING) *)
+
+let list_of_string s = List.init (String.length s) (String.get s)
+;;
+
+let isnat s = List.for_all (String.contains "0123456789") (list_of_string s)
+;;
 
 let rec string_of_ty ty = match ty with
     TyBool ->
@@ -78,6 +88,13 @@ let rec string_of_ty ty = match ty with
       "(" ^ string_of_ty ty1 ^ ")" ^ " -> " ^ "(" ^ string_of_ty ty2 ^ ")"
   | TyStr ->
       "String"
+  | TyRcd tyL when isnat (fst (List.hd tyL)) ->
+      let sFdL = List.map (fun (_, ty) -> string_of_ty ty) tyL in
+      "{" ^ (String.concat ", " sFdL) ^ "}"
+  | TyRcd tyL ->
+      let sFdL = List.map (fun (fn, ty) -> fn ^ ":" ^ string_of_ty ty) tyL in
+      "{" ^ (String.concat ", " sFdL) ^ "}"
+      
 ;;
 
 exception Type_error of string
@@ -166,6 +183,24 @@ let rec typeof tctx tm = match tm with
         if typeof tctx t2 = TyStr then TyStr
         else raise (Type_error "right argument of ^ is not a string")
       else raise (Type_error "left argument of ^ is not a string")
+
+    (* T-Tuple/T-Rcd*)
+  | TmRcd fdL ->
+      let fnL, tmL = List.split fdL in
+      TyRcd (List.combine fnL (List.map (typeof tctx) tmL))
+
+    (* T-Proj*)
+  | TmProj (t1, fn) ->
+      let tyT1 = typeof tctx t1 in
+      (match tyT1 with
+          TyRcd tyL ->
+            (try List.assoc fn tyL with
+              Not_found ->
+                raise (Type_error ("field " ^ fn ^ "not found")))
+        | _ ->
+          raise (Type_error ("can not project type" ^ string_of_ty tyT1))
+      )
+
 ;;
 
 
@@ -206,6 +241,16 @@ let rec string_of_term = function
       "\"" ^ s ^ "\""
   | TmStrCat (t1, t2) ->
       "(" ^ string_of_term t1 ^ ") ^ (" ^ string_of_term t2 ^ ")"
+  | TmRcd [] ->
+      "{}"
+  | TmRcd fdL when isnat (fst (List.hd fdL)) ->
+      let sFdL = List.map (fun (_, tm) -> string_of_term tm) fdL in
+      "{" ^ (String.concat ", " sFdL) ^ "}"
+  | TmRcd fdL ->
+      let sFdL = List.map (fun (fn, tm) -> fn ^ "=" ^ string_of_term tm) fdL in
+      "{" ^ (String.concat ", " sFdL) ^ "}"
+  | TmProj (t1, fn) ->
+      string_of_term t1 ^ "." ^ fn
 ;;
 
 let rec ldif l1 l2 = match l1 with
@@ -247,6 +292,12 @@ let rec free_vars tm = match tm with
       []
   | TmStrCat (t1, t2) ->
       lunion (free_vars t1) (free_vars t2)
+  | TmRcd fdL ->
+      let _, tmL = List.split fdL in
+      List.fold_left lunion [] (List.map free_vars tmL)
+  | TmProj (t1, _) ->
+      free_vars t1
+
 ;;
 
 let rec fresh_name x l =
@@ -292,6 +343,11 @@ let rec subst x s tm = match tm with
       TmStr st
   | TmStrCat (t1, t2) ->
       TmStrCat (subst x s t1, subst x s t2)
+  | TmRcd fdL ->
+      let fnL, tmL = List.split fdL in
+      TmRcd (List.combine fnL (List.map (subst x s) tmL))
+  | TmProj (t1, fn) ->
+      TmProj (subst x s t1, fn)
 ;;
 
 let rec isnumericval tm = match tm with
@@ -402,6 +458,17 @@ let rec eval1 vctx tm = match tm with
   | TmStrCat (t1, TmStr s2) -> (match eval1 vctx t1 with
         TmStr s1 -> TmStr (s1 ^ s2)
       | _ -> raise NoRuleApplies)
+
+    (* E-Tuple/E-Rcd *)
+  | TmRcd fdL ->
+      let fnL, tmL = List.split fdL in
+      TmRcd (List.combine fnL (List.map (eval1 vctx) tmL))
+
+    (* E-Proj *)
+  | TmProj (t1, fn) ->
+      let t1' = eval1 vctx t1 in
+      TmProj (t1', fn)
+
   | TmVar s ->
       getvbinding vctx s
 

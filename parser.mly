@@ -22,7 +22,10 @@
 
 %token LPAREN
 %token RPAREN
+%token LBRACK
+%token RBRACK
 %token DOT
+%token COMMA
 %token EQ
 %token COLON
 %token ARROW
@@ -56,7 +59,7 @@ term :
       { TmLetIn ($2, TmFix (TmAbs ($2, $4, $6)), $8) }
 
 appTerm :
-    atomicTerm
+  | projTerm
       { $1 }
   | SUCC atomicTerm
       { TmSucc $2 }
@@ -64,10 +67,40 @@ appTerm :
       { TmPred $2 }
   | ISZERO atomicTerm
       { TmIsZero $2 }
-  | appTerm STRCAT atomicTerm
+  | projTerm STRCAT atomicTerm
       { TmStrCat ($1, $3) }
-  | appTerm atomicTerm
+  | LBRACK RBRACK
+      { TmRcd [] }
+  | LBRACK posTerms RBRACK
+      { TmRcd (List.combine (List.init (List.length $2) string_of_int) $2) }
+  | LBRACK fieldTerms RBRACK
+      { TmRcd $2}
+  | projTerm atomicTerm
       { TmApp ($1, $2) }
+
+projTerm :
+    atomicTerm
+      { $1 }
+  | appTerm DOT INTV
+      {TmProj ($1, string_of_int $3)}
+  | appTerm DOT STRINGV
+      {TmProj ($1, $3)}
+
+posTerms:
+    projTerm COMMA posTerms
+      { $1::$3 }
+  | projTerm COMMA 
+      { $1::[] }
+  | projTerm 
+      { $1::[] }
+
+fieldTerms:
+    STRINGV EQ projTerm COMMA fieldTerms
+      { ($1, $3)::$5 }
+  | STRINGV EQ projTerm COMMA
+      { ($1, $3)::[] }
+  | STRINGV EQ projTerm
+      { ($1, $3)::[] }
 
 atomicTerm :
     LPAREN term RPAREN

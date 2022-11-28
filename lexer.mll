@@ -25,7 +25,10 @@ rule token = parse
   | '^'         { STRCAT }
   | '('         { LPAREN }
   | ')'         { RPAREN }
+  | '{'         { LBRACK }
+  | '}'         { RBRACK }
   | '.'         { DOT }
+  | ','         { COMMA }
   | '='         { EQ }
   | ':'         { COLON }
   | "->"        { ARROW }
