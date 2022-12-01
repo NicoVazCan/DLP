@@ -6,28 +6,39 @@ open Lambda;;
 open Parser;;
 open Lexer;;
 
+let del = ';';;
+
 let top_level_loop () =
   print_endline "Evaluator of lambda expressions...";
-  let rec loop ctxs =
+  let rec loop ctx =
+    let print_term linea = (
+      let tm = s token (from_string (linea)) in
+            let tyTm = typeof ctx tm in
+            print_endline (string_of_term (eval tm) ^ " : " ^ string_of_ty tyTm)) in
     print_string ">> ";
     flush stdout;
     try
-      let c = s token (from_string (read_line ())) in 
-      loop (execute ctxs c)
+      let rec aux s = 
+        let linea = read_line() in
+        if String.contains linea del
+        then print_term (s ^ (List.hd (String.split_on_char del linea)))
+        else aux (s ^ linea)
+      in aux "";
+      loop ctx
     with
        Lexical_error ->
          print_endline "lexical error";
-         loop ctxs
+         loop ctx
      | Parse_error ->
          print_endline "syntax error";
-         loop ctxs
+         loop ctx
      | Type_error e ->
          print_endline ("type error: " ^ e);
-         loop ctxs
+         loop ctx
      | End_of_file ->
          print_endline "...bye!!!"
   in
-    loop (emptyvctx, emptytctx)
+    loop emptyctx
   ;;
 
 top_level_loop ()
