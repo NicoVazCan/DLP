@@ -196,11 +196,9 @@ let rec typeof tctx tm = match tm with
           TyRcd tyL ->
             (try List.assoc fn tyL with
               Not_found ->
-                raise (Type_error ("field " ^ fn ^ "not found")))
+                raise (Type_error ("field " ^ fn ^ " not found")))
         | _ ->
-          raise (Type_error ("can not project type" ^ string_of_ty tyT1))
-      )
-
+          raise (Type_error ("can not project type " ^ string_of_ty tyT1)))
 ;;
 
 
@@ -362,6 +360,7 @@ let rec isval tm = match tm with
   | TmAbs _ -> true
   | t when isnumericval t -> true
   | TmStr _ -> true
+  | TmRcd _ -> true
   | _ -> false
 ;;
 
@@ -445,24 +444,47 @@ let rec eval1 vctx tm = match tm with
       let t1' = eval1 vctx t1 in
       TmFix t1'
 
-    (* E-^: base case *)
-  | TmStrCat (TmStr s1, TmStr s2) ->
-      TmStr (s1 ^ s2)
+    (* E-StrCat *)
+  | TmStrCat (t1, t2) when isval t1 && isval t2 ->
+      (match t1, t2 with
+          (TmStr s1, TmStr s2) ->
+              TmStr (s1 ^ s2)
+        | _ -> raise NoRuleApplies)
 
-    (* E-^: evaluate right argument before concat *)
-  | TmStrCat (TmStr s1, t2) -> (match eval1 vctx t2 with
-        TmStr s2 -> TmStr (s1 ^ s2)
-      | _ -> raise NoRuleApplies)
+    (* E-StrCat: evaluate arguments before concat *)
+  | TmStrCat (t1, t2) when isval t1 ->
+      let t2' = eval1 vctx t2 in
+      TmStrCat (t1, t2')
 
-    (* E-^: evaluate left argument before concat *)
-  | TmStrCat (t1, TmStr s2) -> (match eval1 vctx t1 with
-        TmStr s1 -> TmStr (s1 ^ s2)
-      | _ -> raise NoRuleApplies)
+    (* E-StrCat: evaluate arguments before concat *)
+  | TmStrCat (t1, t2) when isval t2 ->
+      let t1' = eval1 vctx t1 in
+      TmStrCat (t1', t2)
+
+    (* E-StrCat: evaluate arguments before concat *)
+  | TmStrCat (t1, t2) ->
+      let t1', t2' = eval1 vctx t1, eval1 vctx t2 in
+      TmStrCat (t1', t2')
 
     (* E-Tuple/E-Rcd *)
   | TmRcd fdL ->
-      let fnL, tmL = List.split fdL in
-      TmRcd (List.combine fnL (List.map (eval1 vctx) tmL))
+      let change = ref false in
+      let rec rcd_deep_eval tm = match tm with
+          TmRcd fdL ->
+            let fnL, tmL = List.split fdL in
+            TmRcd (List.combine fnL (List.map (rcd_deep_eval) tmL))
+        | tm when isval tm -> tm
+        | tm -> change := true; eval1 vctx tm
+      in
+      let tm' = rcd_deep_eval tm in
+      if !change then tm'
+      else raise NoRuleApplies
+
+    (* E-ProjRCD\E-ProjTuple *)
+  | TmProj (t1, fn) when isval t1 ->
+      (match t1 with
+          TmRcd fdL -> List.assoc fn fdL
+        | _ -> raise NoRuleApplies)
 
     (* E-Proj *)
   | TmProj (t1, fn) ->

@@ -19,7 +19,6 @@
 %token NAT
 %token STRING
 %token STRCAT
-
 %token LPAREN
 %token RPAREN
 %token LBRACK
@@ -59,48 +58,32 @@ term :
       { TmLetIn ($2, TmFix (TmAbs ($2, $4, $6)), $8) }
 
 appTerm :
+    projTerm
+      { $1 }
+  | SUCC projTerm
+      { TmSucc $2 }
+  | PRED projTerm
+      { TmPred $2 }
+  | ISZERO projTerm
+      { TmIsZero $2 }
+  | srtCatTerm STRCAT projTerm
+      { TmStrCat ($1, $3) }
+  | appTerm projTerm
+      { TmApp ($1, $2) }
+
+srtCatTerm:
+    srtCatTerm STRCAT projTerm
+      { TmStrCat ($1, $3) }
   | projTerm
       { $1 }
-  | SUCC atomicTerm
-      { TmSucc $2 }
-  | PRED atomicTerm
-      { TmPred $2 }
-  | ISZERO atomicTerm
-      { TmIsZero $2 }
-  | projTerm STRCAT atomicTerm
-      { TmStrCat ($1, $3) }
-  | LBRACK RBRACK
-      { TmRcd [] }
-  | LBRACK posTerms RBRACK
-      { TmRcd (List.combine (List.init (List.length $2) string_of_int) $2) }
-  | LBRACK fieldTerms RBRACK
-      { TmRcd $2}
-  | projTerm atomicTerm
-      { TmApp ($1, $2) }
 
 projTerm :
     atomicTerm
       { $1 }
-  | appTerm DOT INTV
+  | projTerm DOT INTV
       {TmProj ($1, string_of_int $3)}
-  | appTerm DOT STRINGV
+  | projTerm DOT STRINGV
       {TmProj ($1, $3)}
-
-posTerms:
-    projTerm COMMA posTerms
-      { $1::$3 }
-  | projTerm COMMA 
-      { $1::[] }
-  | projTerm 
-      { $1::[] }
-
-fieldTerms:
-    STRINGV EQ projTerm COMMA fieldTerms
-      { ($1, $3)::$5 }
-  | STRINGV EQ projTerm COMMA
-      { ($1, $3)::[] }
-  | STRINGV EQ projTerm
-      { ($1, $3)::[] }
 
 atomicTerm :
     LPAREN term RPAREN
@@ -118,12 +101,56 @@ atomicTerm :
         in f $1 }
   | STRINGL
       { TmStr $1 }
+  | LBRACK RBRACK
+      { TmRcd [] }
+  | LBRACK posTerms RBRACK
+      { TmRcd (List.combine (List.init (List.length $2) string_of_int) $2) }
+  | LBRACK fieldTerms RBRACK
+      { TmRcd $2}
+
+posTerms :
+    projTerm COMMA posTerms
+      { $1::$3 }
+  | projTerm COMMA 
+      { $1::[] }
+  | projTerm 
+      { $1::[] }
+
+fieldTerms :
+    STRINGV EQ projTerm COMMA fieldTerms
+      { ($1, $3)::$5 }
+  | STRINGV EQ projTerm COMMA
+      { ($1, $3)::[] }
+  | STRINGV EQ projTerm
+      { ($1, $3)::[] }
 
 ty :
     atomicTy
       { $1 }
   | atomicTy ARROW ty
       { TyArr ($1, $3) }
+  | LBRACK RBRACK
+      { TyRcd [] }
+  | LBRACK posTys RBRACK
+      { TyRcd (List.combine (List.init (List.length $2) string_of_int) $2) }
+  | LBRACK fieldTys RBRACK
+      { TyRcd $2}
+
+posTys :
+    ty COMMA posTys
+      { $1::$3 }
+  | ty COMMA 
+      { $1::[] }
+  | ty 
+      { $1::[] }
+
+fieldTys:
+    STRINGV COLON ty COMMA fieldTys
+      { ($1, $3)::$5 }
+  | STRINGV COLON ty COMMA
+      { ($1, $3)::[] }
+  | STRINGV COLON ty
+      { ($1, $3)::[] }
 
 atomicTy :
     LPAREN ty RPAREN  
