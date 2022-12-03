@@ -516,6 +516,7 @@ let execute (vctx, tctx) = function
       let tm' = eval vctx tm in 
       print_endline ("- : " ^ string_of_ty tyTm
                      ^ " = " ^ string_of_term tm');
+      flush stdout;
       (vctx, tctx)
 
   | Bind (s, tm) ->
@@ -523,6 +524,7 @@ let execute (vctx, tctx) = function
       let tm' = eval vctx tm in
       print_endline (s ^ " : " ^ string_of_ty tyTm
                      ^ " = " ^ string_of_term tm');
+      flush stdout;
       (addvbinding vctx s tm', addtbinding tctx s tyTm)
 ;;
 
