@@ -16,3 +16,31 @@ let id_nat = L x:Nat. x in id_nat 5
 let x = 5 in let id_nat = L x:Nat. x in id_nat x
 let fix = lambda f.(lambda x. f (lambda y. x x y)) (lambda x. f (lambda y. x x y)) in let sumaux = lambda f. (lambda n. (lambda m. if (iszero n) then m else succ (f (pred n) m))) in let sum = fix sumaux in sum 21 34
 let fix = lambda f.(lambda x. f (lambda y. x x y)) (lambda x. f (lambda y. x x y)) in let sumaux = lambda f. (lambda n. (lambda m. if (iszero n) then m else succ (f (pred n) m))) in let sum = fix sumaux in let prodaux = lambda f. (lambda n. (lambda m. if (iszero m) then 0 else sum n (f n (pred m)))) in let prod = fix prodaux in prod 12 5
+
+
+$ (* Funciones con listas *)
+
+length = letrec aux:(List Nat)->(Nat->Nat) = L l:List Nat. L n:Nat.
+  if isnil[Nat] l then n else aux (tail[Nat] l) (succ n)
+in
+  L l:List Nat. aux l 0
+$
+
+append = letrec aux:(List Nat)->((List Nat)->(List Nat)) =
+  L la:List Nat. L lb:List Nat.
+    if isnil[Nat] la
+    then lb
+    else cons[Nat] (head[Nat] la) (aux (tail[Nat] la) lb)
+in
+  aux
+$
+
+map = letrec aux:(Nat->Nat)->((List Nat)->(List Nat)) =
+  L f:Nat->Nat. L l:List Nat.
+    if isnil[Nat] l
+    then l
+    else cons[Nat] (f (head[Nat] l)) (aux f (tail[Nat] l))
+in
+  aux
+$
+
