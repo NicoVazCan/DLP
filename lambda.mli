@@ -5,6 +5,7 @@ type ty =
   | TyArr of ty * ty
   | TyStr
   | TyRcd of (string * ty) list
+  | TyList of ty
 ;;
 
 type tcontext =
@@ -28,6 +29,11 @@ type term =
   | TmStrCat of term * term
   | TmRcd of (string * term) list
   | TmProj of term * string
+  | TmNil of ty
+  | TmCons of ty * term * term
+  | TmIsNil of ty * term
+  | TmHead of ty * term
+  | TmTail of ty * term
 ;;
 
 type vcontext =

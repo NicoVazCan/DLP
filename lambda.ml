@@ -7,6 +7,7 @@ type ty =
   | TyArr of ty * ty
   | TyStr
   | TyRcd of (string * ty) list
+  | TyList of ty
 ;;
 
 type tcontext =
@@ -30,6 +31,11 @@ type term =
   | TmStrCat of term * term
   | TmRcd of (string * term) list
   | TmProj of term * string
+  | TmNil of ty
+  | TmCons of ty * term * term
+  | TmIsNil of ty * term
+  | TmHead of ty * term
+  | TmTail of ty * term
 ;;
 
 type vcontext =
@@ -94,6 +100,8 @@ let rec string_of_ty ty = match ty with
   | TyRcd tyL ->
       let sFdL = List.map (fun (fn, ty) -> fn ^ ":" ^ string_of_ty ty) tyL in
       "{" ^ (String.concat ", " sFdL) ^ "}"
+  | TyList ty ->
+      "List " ^ (string_of_ty ty)
       
 ;;
 
@@ -199,6 +207,42 @@ let rec typeof tctx tm = match tm with
                 raise (Type_error ("field " ^ fn ^ " not found")))
         | _ ->
           raise (Type_error ("can not project type " ^ string_of_ty tyT1)))
+
+    (* T-IsNil *)
+  | TmNil ty ->
+      TyList ty
+
+    (* T-Cons *)
+  | TmCons (ty, t1, t2) ->
+      let tyT1, tyT2 = typeof tctx t1, typeof tctx t2 in
+      (match tyT2 with
+          TyList tlTy when ty = tyT1 && ty = tlTy -> 
+            TyList ty
+        | TyList tlTy -> 
+            raise (Type_error ("head term of type " ^ (string_of_ty tyT1) ^
+                               " and tail of type " ^ (string_of_ty tyT2) ^
+                               ", in a list of " ^ (string_of_ty ty)))
+        | _ ->
+            raise (Type_error ("list's tail is not a term list, is " ^
+                   string_of_ty tyT2)))
+
+    (* T-IsNil *)
+  | TmIsNil (ty, t1) ->
+      if typeof tctx t1 = TyList ty then TyBool
+      else raise (Type_error ("argument of isnil is not a " ^
+                              (string_of_ty ty) ^ "list"))
+
+    (* T-Head *)
+  | TmHead (ty, t1) ->
+      if typeof tctx t1 = TyList ty then ty
+      else raise (Type_error ("argument of head is not a " ^
+                              (string_of_ty ty) ^ "list"))
+
+    (* T-Tail *)
+  | TmTail (ty, t1) ->
+      if typeof tctx t1 = TyList ty then TyList ty
+      else raise (Type_error ("argument of tail is not a " ^
+                              (string_of_ty ty) ^ "list"))
 ;;
 
 
@@ -249,6 +293,34 @@ let rec string_of_term = function
       "{" ^ (String.concat ", " sFdL) ^ "}"
   | TmProj (t1, fn) ->
       string_of_term t1 ^ "." ^ fn
+  | TmNil ty ->
+      "[]:" ^ string_of_ty ty 
+  | TmCons (_, _, _) as tm ->
+      let string_of_cons  =
+        let rec aux s tm = match tm with
+          | TmCons (ty, t1, TmNil _) -> 
+              s ^ ", " ^ (string_of_term t1) ^ "]:" ^ string_of_ty ty
+          | TmCons (_, t1, t2) ->
+              aux (s ^ ", " ^ (string_of_term t1)) t2
+          | _ ->
+            string_of_term tm
+        in function
+             TmNil _ ->
+              "[]"
+          | TmCons (_, t1, TmNil _) ->
+              "[" ^ (string_of_term t1) ^ "]"
+          | TmCons (_, t1, t2)->
+              aux ("[" ^ (string_of_term t1)) t2
+          | tm ->
+            string_of_term tm
+      in
+        string_of_cons tm
+  | TmIsNil (ty, t) ->
+      "isnil[" ^ string_of_ty ty ^ "] " ^ "(" ^ string_of_term t ^ ")"
+  | TmHead (ty, t) ->
+      "head[" ^ string_of_ty ty ^ "] " ^ "(" ^ string_of_term t ^ ")"
+  | TmTail (ty, t) ->
+      "tail[" ^ string_of_ty ty ^ "] " ^ "(" ^ string_of_term t ^ ")"
 ;;
 
 let rec ldif l1 l2 = match l1 with
@@ -294,6 +366,16 @@ let rec free_vars tm = match tm with
       let _, tmL = List.split fdL in
       List.fold_left lunion [] (List.map free_vars tmL)
   | TmProj (t1, _) ->
+      free_vars t1
+  | TmNil _ ->
+      []
+  | TmCons (_, t1, t2) ->
+      lunion (free_vars t1) (free_vars t2)
+  | TmIsNil (_, t1) ->
+      free_vars t1
+  | TmHead (_, t1) ->
+      free_vars t1
+  | TmTail (_, t1) ->
       free_vars t1
 
 ;;
@@ -346,6 +428,16 @@ let rec subst x s tm = match tm with
       TmRcd (List.combine fnL (List.map (subst x s) tmL))
   | TmProj (t1, fn) ->
       TmProj (subst x s t1, fn)
+  | TmNil ty ->
+      TmNil ty
+  | TmCons (ty, t1, t2) ->
+      TmCons (ty, subst x s t1, subst x s t2)
+  | TmIsNil (ty, t1) ->
+      TmIsNil (ty, subst x s t1)
+  | TmHead (ty, t1) ->
+      TmHead (ty, subst x s t1)
+  | TmTail (ty, t1) ->
+      TmTail (ty, subst x s t1)
 ;;
 
 let rec isnumericval tm = match tm with
@@ -360,7 +452,10 @@ let rec isval tm = match tm with
   | TmAbs _ -> true
   | t when isnumericval t -> true
   | TmStr _ -> true
-  | TmRcd _ -> true
+  | TmRcd fdL when let _, tmL = List.split fdL in
+                   List.for_all isval tmL -> true
+  | TmNil _ -> true
+  | TmCons (_, t1, t2) when isval t1 && isval t2 -> true
   | _ -> false
 ;;
 
@@ -451,34 +546,26 @@ let rec eval1 vctx tm = match tm with
               TmStr (s1 ^ s2)
         | _ -> raise NoRuleApplies)
 
-    (* E-StrCat: evaluate arguments before concat *)
+    (* E-StrCat2 *)
   | TmStrCat (t1, t2) when isval t1 ->
       let t2' = eval1 vctx t2 in
       TmStrCat (t1, t2')
 
-    (* E-StrCat: evaluate arguments before concat *)
-  | TmStrCat (t1, t2) when isval t2 ->
+    (* E-StrCat1 *)
+  | TmStrCat (t1, t2) ->
       let t1' = eval1 vctx t1 in
       TmStrCat (t1', t2)
 
-    (* E-StrCat: evaluate arguments before concat *)
-  | TmStrCat (t1, t2) ->
-      let t1', t2' = eval1 vctx t1, eval1 vctx t2 in
-      TmStrCat (t1', t2')
-
     (* E-Tuple/E-Rcd *)
-  | TmRcd fdL ->
-      let change = ref false in
+  | TmRcd fdL when not (isval tm) ->
       let rec rcd_deep_eval tm = match tm with
           TmRcd fdL ->
             let fnL, tmL = List.split fdL in
             TmRcd (List.combine fnL (List.map (rcd_deep_eval) tmL))
         | tm when isval tm -> tm
-        | tm -> change := true; eval1 vctx tm
+        | tm -> eval1 vctx tm
       in
-      let tm' = rcd_deep_eval tm in
-      if !change then tm'
-      else raise NoRuleApplies
+        rcd_deep_eval tm
 
     (* E-ProjRCD\E-ProjTuple *)
   | TmProj (t1, fn) when isval t1 ->
@@ -490,6 +577,47 @@ let rec eval1 vctx tm = match tm with
   | TmProj (t1, fn) ->
       let t1' = eval1 vctx t1 in
       TmProj (t1', fn)
+
+    (* E-Cons2 *)
+  | TmCons (ty, t1, t2) when isval t1 ->
+      let t2' = eval1 vctx t2 in
+      TmCons (ty, t1, t2')
+
+    (* E-Cons1 *)
+  | TmCons (ty, t1, t2) ->
+      let t1' = eval1 vctx t1 in
+      TmCons (ty, t1', t2)
+
+    (* E-IsNilNil *)
+  | TmIsNil (_, TmNil _) ->
+      TmTrue
+
+    (* E-IsNilCons *)
+  | TmIsNil (_, TmCons (_, _, _)) ->
+      TmFalse
+
+    (* E-IsNil *)
+  | TmIsNil (ty, t1) ->
+      let t1' = eval1 vctx t1 in
+      TmIsNil (ty, t1')
+
+    (* E-HeadCons *)
+  | TmHead (_, TmCons (_, t1, _)) ->
+      t1
+
+    (* E-Head *)
+  | TmHead (ty, t1) ->
+      let t1' = eval1 vctx t1 in
+      TmHead (ty, t1')
+
+    (* E-TailCons *)
+  | TmTail (ty, TmCons (_, _, t1)) ->
+      t1
+
+    (* E-Tail *)
+  | TmTail (ty, t1) ->
+    let t1' = eval1 vctx t1 in
+      TmTail (ty, t1')
 
   | TmVar s ->
       getvbinding vctx s

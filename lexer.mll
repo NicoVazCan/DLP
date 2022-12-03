@@ -25,8 +25,16 @@ rule token = parse
   | '^'         { STRCAT }
   | '('         { LPAREN }
   | ')'         { RPAREN }
-  | '{'         { LBRACK }
-  | '}'         { RBRACK }
+  | '{'         { LBRACE }
+  | '}'         { RBRACE }
+  | '['         { LBRACK }
+  | ']'         { RBRACK }
+  | "nil"       { NIL }
+  | "cons"      { CONS }
+  | "isnil"     { ISNIL }
+  | "head"      { HEAD }
+  | "tail"      { TAIL }
+  | "List"      { LIST }
   | '.'         { DOT }
   | ','         { COMMA }
   | '='         { EQ }

@@ -14,28 +14,27 @@ let top_level_loop () =
     print_string ">> ";
     flush stdout;
     
-    let rec inner_loop cmd = print_endline ("loop: " ^ cmd);
-      try
+    let rec inner_loop cmd =
         let line = read_line () in
         let cmd' = cmd ^ (List.hd (String.split_on_char del line)) in
         if String.contains line del then
           let tm = s token (from_string cmd') in
-          flush stdout; loop (execute ctxs tm)
+          loop (execute ctxs tm)
         else print_string "   "; flush stdout; inner_loop cmd'
-      with
-         Lexical_error ->
-           print_endline "lexical error";
-           loop ctxs
-       | Parse_error ->
-           print_endline "syntax error";
-           loop ctxs
-       | Type_error e ->
-           print_endline ("type error: " ^ e);
-           loop ctxs
-       | End_of_file ->
-           print_endline "...bye!!!"
     in
-      inner_loop ""
+      try inner_loop "" with
+          Lexical_error ->
+            print_endline "lexical error";
+            loop ctxs
+        | Parse_error ->
+            print_endline "syntax error";
+            loop ctxs
+        | Type_error e ->
+            print_endline ("type error: " ^ e);
+            loop ctxs
+        | End_of_file ->
+            print_endline "...bye!!!";
+            exit 0
   in
     loop (emptyvctx, emptytctx)
 ;;
