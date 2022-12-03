@@ -6,6 +6,7 @@ type ty =
   | TyStr
   | TyRcd of (string * ty) list
   | TyList of ty
+  | TyUnit
 ;;
 
 type tcontext =
@@ -34,6 +35,7 @@ type term =
   | TmIsNil of ty * term
   | TmHead of ty * term
   | TmTail of ty * term
+  | TmUnit
 ;;
 
 type vcontext =

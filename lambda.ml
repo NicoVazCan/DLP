@@ -8,6 +8,7 @@ type ty =
   | TyStr
   | TyRcd of (string * ty) list
   | TyList of ty
+  | TyUnit
 ;;
 
 type tcontext =
@@ -36,6 +37,7 @@ type term =
   | TmIsNil of ty * term
   | TmHead of ty * term
   | TmTail of ty * term
+  | TmUnit
 ;;
 
 type vcontext =
@@ -102,6 +104,8 @@ let rec string_of_ty ty = match ty with
       "{" ^ (String.concat ", " sFdL) ^ "}"
   | TyList ty ->
       "List " ^ (string_of_ty ty)
+  | TyUnit ->
+      "Unit"
       
 ;;
 
@@ -243,6 +247,10 @@ let rec typeof tctx tm = match tm with
       if typeof tctx t1 = TyList ty then TyList ty
       else raise (Type_error ("argument of tail is not a " ^
                               (string_of_ty ty) ^ "list"))
+
+    (* T-Unit *)
+  | TmUnit ->
+      TyUnit
 ;;
 
 
@@ -321,6 +329,8 @@ let rec string_of_term = function
       "head[" ^ string_of_ty ty ^ "] " ^ "(" ^ string_of_term t ^ ")"
   | TmTail (ty, t) ->
       "tail[" ^ string_of_ty ty ^ "] " ^ "(" ^ string_of_term t ^ ")"
+  | TmUnit ->
+      "unit"
 ;;
 
 let rec ldif l1 l2 = match l1 with
@@ -377,6 +387,8 @@ let rec free_vars tm = match tm with
       free_vars t1
   | TmTail (_, t1) ->
       free_vars t1
+  | TmUnit ->
+      []
 
 ;;
 
@@ -438,6 +450,8 @@ let rec subst x s tm = match tm with
       TmHead (ty, subst x s t1)
   | TmTail (ty, t1) ->
       TmTail (ty, subst x s t1)
+  | TmUnit ->
+      TmUnit
 ;;
 
 let rec isnumericval tm = match tm with

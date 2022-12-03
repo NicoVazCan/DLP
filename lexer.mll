@@ -35,10 +35,13 @@ rule token = parse
   | "head"      { HEAD }
   | "tail"      { TAIL }
   | "List"      { LIST }
+  | "unit"      { UNIT }
+  | "Unit"      { UNIT_TY }
   | '.'         { DOT }
   | ','         { COMMA }
   | '='         { EQ }
   | ':'         { COLON }
+  | ';'         { DOT_COMMA }
   | "->"        { ARROW }
   | ['0'-'9']+  { INTV (int_of_string (Lexing.lexeme lexbuf)) }
   | ['a'-'z']['a'-'z' '_' '0'-'9']*

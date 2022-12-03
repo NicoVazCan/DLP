@@ -31,8 +31,11 @@
 %token HEAD
 %token TAIL
 %token LIST
+%token UNIT
+%token UNIT_TY
 %token DOT
 %token COMMA
+%token DOT_COMMA
 %token EQ
 %token COLON
 %token ARROW
@@ -48,10 +51,16 @@
 %%
 
 s :
-    STRINGV EQ term EOF
+    STRINGV EQ seqTerm EOF
       { Bind ($1, $3) }
-  | term EOF
+  | seqTerm EOF
       { Eval $1 }
+
+seqTerm:
+    term DOT_COMMA seqTerm
+      { TmApp (TmAbs("_", TyUnit, $3), $1) }
+  | term
+      { $1 }
 
 term :
     appTerm
@@ -156,6 +165,9 @@ atomicTerm :
       { TmNil $2 }
   | LBRACE RBRACE
       { TmRcd [] }
+  | UNIT
+      { TmUnit }
+
 
 ty :
     atomicTy
@@ -196,4 +208,6 @@ atomicTy :
       { TyNat }
   | STRING
       { TyStr }
+  | UNIT_TY
+      { TyUnit }
 
