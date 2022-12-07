@@ -44,3 +44,30 @@ in
   aux
 $
 
+
+$ (* Expresiones subtipado *)
+
+$ (* No se aplica subtipado a tuplas *)
+(L x:{}. 1) {1}$ Falla
+(L x:{Nat}. 1) {1}$ Bien
+(L x:{Nat}. 1) {1,2}$ Falla
+
+$ (* Todos los registros son subtipo de top {} *)
+(L x:{}. 1) {}
+(L x:{}. 1) {x=1}$ 
+(L x:{}. 1) {x=1,y=2}$
+
+$ (* Pero no a la inversa *)
+(L x:{x=1}. x.x) {}$
+
+$ (* Caso normal de subtipado con registros *)
+(L x:{x=1}. x.x) {x=1,y=2}$
+(L x:{x=1}. x.x) {x=1,y=2,z=3}$
+
+$ (* Casos con aplicaciones *)
+(L f:{x:Nat,y:Nat}->{x:Nat,y:Nat}. f {x=1,y=2}) (L x:{x:Nat,y:Nat}. {x=x.x,y=x.x})$ Tipado basico
+(L f:{x:Nat,y:Nat}->{x:Nat,y:Nat}. f {x=1,y=2}) (L x:{x:Nat,y:Nat,z:Nat}. {x=x.x,y=x.x})$ Falla
+(L f:{x:Nat,y:Nat}->{x:Nat,y:Nat}. f {x=1,y=2}) (L x:{x:Nat,y:Nat}. {x=x.x})$ Falla
+(L f:{x:Nat,y:Nat}->{x:Nat,y:Nat}. f {x=1,y=2}) (L x:{x:Nat}. {x=x.x,y=x.x})$ Bien
+(L f:{x:Nat,y:Nat}->{x:Nat,y:Nat}. f {x=1,y=2}) (L x:{x:Nat,y:Nat}. {x=x.x,y=x.x,z=x.x})$ Bien
+(L f:{x:Nat,y:Nat}->{x:Nat,y:Nat}. f {x=1,y=2}) (L x:{x:Nat}. {x=x.x,y=x.x,z=x.x})$ Bien

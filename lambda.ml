@@ -127,7 +127,7 @@ let rec typeof tctx tm =
 
         (* S-RcdWidth/S-RcdDepth/S-RcdPerm *)
     | TyRcd sFdTyL, TyRcd tFdTyL when
-        tFdTyL == [] && not (isnat (fst (List.hd sFdTyL))) &&
+        not (sFdTyL != [] && (isnat (fst (List.hd sFdTyL)))) &&
         List.for_all (fun (nm, ty) ->
           try (List.assoc nm sFdTyL) <: ty with 
             Not_found -> false) tFdTyL
