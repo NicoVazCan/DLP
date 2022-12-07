@@ -96,6 +96,8 @@ let rec string_of_ty ty = match ty with
       "(" ^ string_of_ty ty1 ^ ")" ^ " -> " ^ "(" ^ string_of_ty ty2 ^ ")"
   | TyStr ->
       "String"
+  | TyRcd [] ->
+      "{}"
   | TyRcd tyL when isnat (fst (List.hd tyL)) ->
       let sFdL = List.map (fun (_, ty) -> string_of_ty ty) tyL in
       "{" ^ (String.concat ", " sFdL) ^ "}"
@@ -125,9 +127,11 @@ let rec typeof tctx tm =
 
         (* S-RcdWidth/S-RcdDepth/S-RcdPerm *)
     | TyRcd sFdTyL, TyRcd tFdTyL when
+        tFdTyL == [] && not (isnat (fst (List.hd sFdTyL))) &&
         List.for_all (fun (nm, ty) ->
           try (List.assoc nm sFdTyL) <: ty with 
-            Not_found -> false) tFdTyL ->
+            Not_found -> false) tFdTyL
+         ->
         true
 
     | _ ->
