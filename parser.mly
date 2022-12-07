@@ -174,14 +174,32 @@ ty :
       { $1 }
   | atomicTy ARROW ty
       { TyArr ($1, $3) }
+  
+  | LIST ty
+      { TyList $2}
+
+atomicTy :
+    LPAREN ty RPAREN  
+      { $2 } 
+  | BOOL
+      { TyBool }
+  | NAT
+      { TyNat }
+
+  | STRING
+      { TyStr }
   | LBRACE RBRACE
       { TyRcd [] }
-  | LBRACE posTys RBRACE
+  | brackTy
+      { $1 }
+  | UNIT_TY
+      { TyUnit }
+
+brackTy :
+    LBRACE posTys RBRACE
       { TyRcd (List.combine (List.init (List.length $2) string_of_int) $2) }
   | LBRACE fieldTys RBRACE
       { TyRcd $2}
-  | LIST ty
-      { TyList $2}
 
 posTys :
     ty COMMA posTys
@@ -198,16 +216,3 @@ fieldTys:
       { ($1, $3)::[] }
   | STRINGV COLON ty
       { ($1, $3)::[] }
-
-atomicTy :
-    LPAREN ty RPAREN  
-      { $2 } 
-  | BOOL
-      { TyBool }
-  | NAT
-      { TyNat }
-  | STRING
-      { TyStr }
-  | UNIT_TY
-      { TyUnit }
-

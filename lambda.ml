@@ -112,7 +112,27 @@ let rec string_of_ty ty = match ty with
 exception Type_error of string
 ;;
 
-let rec typeof tctx tm = match tm with
+let rec typeof tctx tm = 
+  let rec (<:) s t = match s, t with
+        (* Basic typing rule *)
+      _ when s = t ->
+        true
+
+        (* S-Arrow *)
+    | TyArr (s1, s2), TyArr (t1, t2) when
+          t1 <: s1 && s2 <: t2 ->
+        true
+
+        (* S-RcdWidth/S-RcdDepth/S-RcdPerm *)
+    | TyRcd sFdTyL, TyRcd tFdTyL when
+        List.for_all (fun (nm, ty) ->
+          try (List.assoc nm sFdTyL) <: ty with 
+            Not_found -> false) tFdTyL ->
+        true
+
+    | _ ->
+        false
+  in match tm with
     (* T-True *)
     TmTrue ->
       TyBool
@@ -125,7 +145,7 @@ let rec typeof tctx tm = match tm with
   | TmIf (t1, t2, t3) ->
       if typeof tctx t1 = TyBool then
         let tyT2 = typeof tctx t2 in
-        if typeof tctx t3 = tyT2 then tyT2
+        if typeof tctx t3 <: tyT2 then tyT2
         else raise (Type_error "arms of conditional have different types")
       else
         raise (Type_error "guard of conditional not a boolean")
@@ -136,17 +156,17 @@ let rec typeof tctx tm = match tm with
 
     (* T-Succ *)
   | TmSucc t1 ->
-      if typeof tctx t1 = TyNat then TyNat
+      if typeof tctx t1 <: TyNat then TyNat
       else raise (Type_error "argument of succ is not a number")
 
     (* T-Pred *)
   | TmPred t1 ->
-      if typeof tctx t1 = TyNat then TyNat
+      if typeof tctx t1 <: TyNat then TyNat
       else raise (Type_error "argument of pred is not a number")
 
     (* T-Iszero *)
   | TmIsZero t1 ->
-      if typeof tctx t1 = TyNat then TyBool
+      if typeof tctx t1 <: TyNat then TyBool
       else raise (Type_error "argument of iszero is not a number")
 
     (* T-Var *)
@@ -166,7 +186,7 @@ let rec typeof tctx tm = match tm with
       let tyT2 = typeof tctx t2 in
       (match tyT1 with
            TyArr (tyT11, tyT12) ->
-             if tyT2 = tyT11 then tyT12
+             if tyT2 <: tyT11 then tyT12
              else raise (Type_error "parameter type mismatch")
          | _ -> raise (Type_error "arrow type expected"))
 
@@ -181,7 +201,7 @@ let rec typeof tctx tm = match tm with
       let tyT1 = typeof tctx t1 in
       (match tyT1 with
           TyArr (tyT11, tyT12) ->
-            if tyT11 = tyT12 then tyT12
+            if tyT11 <: tyT12 then tyT12
             else raise (Type_error "result of body not compatible with domain")
         | _ -> raise (Type_error "arrow type expected"))
 
@@ -191,8 +211,8 @@ let rec typeof tctx tm = match tm with
 
     (* T-^ *)
   | TmStrCat (t1, t2) ->
-      if typeof tctx t1 = TyStr then
-        if typeof tctx t2 = TyStr then TyStr
+      if typeof tctx t1 <: TyStr then
+        if typeof tctx t2 <: TyStr then TyStr
         else raise (Type_error "right argument of ^ is not a string")
       else raise (Type_error "left argument of ^ is not a string")
 
@@ -220,7 +240,7 @@ let rec typeof tctx tm = match tm with
   | TmCons (ty, t1, t2) ->
       let tyT1, tyT2 = typeof tctx t1, typeof tctx t2 in
       (match tyT2 with
-          TyList tlTy when ty = tyT1 && ty = tlTy -> 
+          TyList tlTy when ty <: tyT1 && ty <: tlTy -> 
             TyList ty
         | TyList tlTy -> 
             raise (Type_error ("head term of type " ^ (string_of_ty tyT1) ^
@@ -232,19 +252,19 @@ let rec typeof tctx tm = match tm with
 
     (* T-IsNil *)
   | TmIsNil (ty, t1) ->
-      if typeof tctx t1 = TyList ty then TyBool
+      if typeof tctx t1 <: TyList ty then TyBool
       else raise (Type_error ("argument of isnil is not a " ^
                               (string_of_ty ty) ^ "list"))
 
     (* T-Head *)
   | TmHead (ty, t1) ->
-      if typeof tctx t1 = TyList ty then ty
+      if typeof tctx t1 <: TyList ty then ty
       else raise (Type_error ("argument of head is not a " ^
                               (string_of_ty ty) ^ "list"))
 
     (* T-Tail *)
   | TmTail (ty, t1) ->
-      if typeof tctx t1 = TyList ty then TyList ty
+      if typeof tctx t1 <: TyList ty then TyList ty
       else raise (Type_error ("argument of tail is not a " ^
                               (string_of_ty ty) ^ "list"))
 
