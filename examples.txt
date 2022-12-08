@@ -1,24 +1,52 @@
-true
-let x = true in x
-if false then true else false
-0
-succ (succ (succ 0))
-3
-succ (pred 0)
-iszero (pred (succ (succ 0)))
-if iszero 3 then 0 else 1
-iszero true
-if 1 then true else false
-if iszero 3 then 0 else false
-let id = Lx.x in id 3
-let id_bool = L x:Bool. x in id_bool true
-let id_nat = L x:Nat. x in id_nat 5
-let x = 5 in let id_nat = L x:Nat. x in id_nat x
-let fix = lambda f.(lambda x. f (lambda y. x x y)) (lambda x. f (lambda y. x x y)) in let sumaux = lambda f. (lambda n. (lambda m. if (iszero n) then m else succ (f (pred n) m))) in let sum = fix sumaux in sum 21 34
-let fix = lambda f.(lambda x. f (lambda y. x x y)) (lambda x. f (lambda y. x x y)) in let sumaux = lambda f. (lambda n. (lambda m. if (iszero n) then m else succ (f (pred n) m))) in let sum = fix sumaux in let prodaux = lambda f. (lambda n. (lambda m. if (iszero m) then 0 else sum n (f n (pred m)))) in let prod = fix prodaux in prod 12 5
+true$
+let x = true in x$
+if false then true else false$
+0$
+succ (succ (succ 0))$
+3$
+succ (pred 0)$
+iszero (pred (succ (succ 0)))$
+if iszero 3 then 0 else 1$
+(*iszero true*)$
+(*if 1 then true else false*)$
+(*if iszero 3 then 0 else false*)$
+let id = Lx:Nat.x in id 3$
+let id_bool = L x:Bool. x in id_bool true$
+let id_nat = L x:Nat. x in id_nat 5$
+let x = 5 in let id_nat = L x:Nat. x in id_nat x$
+(*
+let fix =
+  lambda f.(lambda x. f (lambda y. x x y))
+    (lambda x. f (lambda y. x x y))
+in
+  let sumaux =
+    lambda f. (lambda n. (lambda m.
+      if (iszero n) then m
+      else succ (f (pred n) m)))
+  in
+    let sum = fix sumaux
+    in sum 21 34
+
+let fix =
+  lambda f.(lambda x. f (lambda y. x x y))
+    (lambda x. f (lambda y. x x y))
+in
+  let sumaux =
+    lambda f. (lambda n. (lambda m. 
+      if (iszero n) then m
+      else succ (f (pred n) m)))
+  in
+    let sum = fix sumaux
+    in
+      let prodaux = lambda f. (lambda n. (lambda m.
+        if (iszero m) then 0
+        else sum n (f n (pred m))))
+      in
+        let prod = fix prodaux in prod 12 5
+*)$
 
 
-$ (* Funciones con listas *)
+(* Funciones con listas *)$
 
 length = letrec aux:(List Nat)->(Nat->Nat) = L l:List Nat. L n:Nat.
   if isnil[Nat] l then n else aux (tail[Nat] l) (succ n)
@@ -45,29 +73,35 @@ in
 $
 
 
-$ (* Expresiones subtipado *)
+(* Expresiones subtipado *)$
 
-$ (* No se aplica subtipado a tuplas *)
-(L x:{}. 1) {1}$ Falla
-(L x:{Nat}. 1) {1}$ Bien
-(L x:{Nat}. 1) {1,2}$ Falla
+(* No se aplica subtipado a tuplas *)$
+(*(L x:{}. 1) {1}       Falla *)$
+(L x:{Nat}. 1) {1}   (* Bien *)$
+(*(L x:{Nat}. 1) {1,2}  Falla *)$
 
-$ (* Todos los registros son subtipo de top {} *)
-(L x:{}. 1) {}
+(* Todos los registros son subtipo de top {} *)$
+(L x:{}. 1) {}$
 (L x:{}. 1) {x=1}$ 
 (L x:{}. 1) {x=1,y=2}$
 
-$ (* Pero no a la inversa *)
-(L x:{x=1}. x.x) {}$
+(* Pero no a la inversa *)$
+(*(L x:{x=1}. x.x) {}*)$
 
-$ (* Caso normal de subtipado con registros *)
-(L x:{x=1}. x.x) {x=1,y=2}$
-(L x:{x=1}. x.x) {x=1,y=2,z=3}$
+(* Caso normal de subtipado con registros *)$
+(L x:{x:Nat}. x.x) {x=1,y=2}$
+(L x:{x:Nat}. x.x) {x=1,y=2,z=3}$
 
-$ (* Casos con aplicaciones *)
-(L f:{x:Nat,y:Nat}->{x:Nat,y:Nat}. f {x=1,y=2}) (L x:{x:Nat,y:Nat}. {x=x.x,y=x.x})$ Tipado basico
-(L f:{x:Nat,y:Nat}->{x:Nat,y:Nat}. f {x=1,y=2}) (L x:{x:Nat,y:Nat,z:Nat}. {x=x.x,y=x.x})$ Falla
-(L f:{x:Nat,y:Nat}->{x:Nat,y:Nat}. f {x=1,y=2}) (L x:{x:Nat,y:Nat}. {x=x.x})$ Falla
-(L f:{x:Nat,y:Nat}->{x:Nat,y:Nat}. f {x=1,y=2}) (L x:{x:Nat}. {x=x.x,y=x.x})$ Bien
-(L f:{x:Nat,y:Nat}->{x:Nat,y:Nat}. f {x=1,y=2}) (L x:{x:Nat,y:Nat}. {x=x.x,y=x.x,z=x.x})$ Bien
-(L f:{x:Nat,y:Nat}->{x:Nat,y:Nat}. f {x=1,y=2}) (L x:{x:Nat}. {x=x.x,y=x.x,z=x.x})$ Bien
+(* Casos con aplicaciones *)$
+(L f:{x:Nat,y:Nat}->{x:Nat,y:Nat}. f {x=1,y=2}) (L x:{x:Nat,y:Nat}. {x=x.x,y=x.x})
+(* Tipado basico *)$
+(*(L f:{x:Nat,y:Nat}->{x:Nat,y:Nat}. f {x=1,y=2}) (L x:{x:Nat,y:Nat,z:Nat}. {x=x.x,y=x.x})
+ Falla *)$
+(*(L f:{x:Nat,y:Nat}->{x:Nat,y:Nat}. f {x=1,y=2}) (L x:{x:Nat,y:Nat}. {x=x.x})
+ Falla *)$
+(L f:{x:Nat,y:Nat}->{x:Nat,y:Nat}. f {x=1,y=2}) (L x:{x:Nat}. {x=x.x,y=x.x})
+(* Bien *)$
+(L f:{x:Nat,y:Nat}->{x:Nat,y:Nat}. f {x=1,y=2}) (L x:{x:Nat,y:Nat}. {x=x.x,y=x.x,z=x.x})
+(* Bien *)$
+(L f:{x:Nat,y:Nat}->{x:Nat,y:Nat}. f {x=1,y=2}) (L x:{x:Nat}. {x=x.x,y=x.x,z=x.x})
+(* Bien *)$

@@ -16,10 +16,10 @@ let top_level_loop () =
     
     let rec inner_loop cmd =
         let line = read_line () in
-        let cmd' = cmd ^ (List.hd (String.split_on_char del line)) in
+        let cmd' = cmd ^ " " ^ (List.hd (String.split_on_char del line)) in
         if String.contains line del then
           let tm = s token (from_string cmd') in
-          loop (execute ctxs tm)
+          loop (executeAndPrint ctxs tm)
         else print_string "   "; flush stdout; inner_loop cmd'
     in
       try inner_loop "" with

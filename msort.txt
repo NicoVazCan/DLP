@@ -1,0 +1,103 @@
+divide = letrec aux:(List Nat)->{List Nat, List Nat} = L l:List Nat.
+	if isnil[Nat] l then {l, nil[Nat]}
+	else 
+		if isnil[Nat] (tail[Nat] l) then {l, nil[Nat]}
+		else
+			let t = tail[Nat] (tail[Nat] l) in
+			let h1 = head[Nat] l in
+			let h2 = head[Nat] (tail[Nat] l) in
+
+			let tls = (aux t) in
+			{(cons[Nat] h1 tls.0), (cons[Nat] h2 tls.1)}
+in aux
+$
+
+leq = letrec aux:Nat->(Nat->Bool) = L n1:Nat. L n2:Nat.
+	if iszero n1 then true
+	else
+		if iszero n2 then false
+		else 
+			aux (pred n1) (pred n2)
+in aux
+$
+
+merge = letrec aux:{List Nat, List Nat}->(List Nat) = L lt:{List Nat, List Nat}.
+	if isnil[Nat] lt.0 then lt.1
+	else
+		if isnil[Nat] lt.1 then lt.0
+		else
+			let h1 = head[Nat] lt.0 in
+			let h2 = head[Nat] lt.1 in
+			let t1 = tail[Nat] lt.0 in
+			let t2 = tail[Nat] lt.1 in
+
+			if leq h1 h2 then cons[Nat] h1 (aux {t1, (cons[Nat] h2 t2)})
+			else
+				cons[Nat] h2 (aux {(cons[Nat] h1 t1), t2})
+in aux
+$
+
+msort = letrec aux:(List Nat)->(List Nat) = L l:List Nat.
+	if isnil[Nat] l then l
+	else
+		if isnil[Nat] (tail[Nat] l) then l
+		else
+			let lt = divide l in
+			merge {(aux lt.0), (aux lt.1)} 
+in aux
+$
+
+read_list = letrec aux:Nat->((List Nat)->(List Nat)) = L len:Nat. L l:List Nat.
+	if iszero len then l
+	else (
+		print_string "Inserte el ";
+		print_nat len;
+		print_string "º número:\n";
+
+		let n = read_nat unit in
+		(aux (pred len) (cons[Nat] n l))
+	)
+in L u:Unit. (
+	print_string "Inserte el número de elementos de la lista:\n";
+	let len = read_nat unit in
+	aux len nil[Nat]
+)
+$
+
+print_list = letrec aux:(List Nat)->Unit = L l:List Nat.
+	if isnil[Nat] l then print_string "]\n"
+	else
+		let h = head[Nat] l in
+		let t = tail[Nat] l in
+
+		if isnil[Nat] t then (
+			print_nat h;
+			print_string "]\n"
+		)
+		else (
+			print_nat h;
+			print_string ", ";
+			aux t
+		)
+in (
+	L l:List Nat. (print_string "["; aux l)
+)
+$
+
+main = L u:Unit. (
+	print_string "Ordenar lista:\n\n";
+	let ul = read_list unit in (
+
+		print_string "\nLista insertada:\n";
+		print_list ul;
+		print_string "\n";
+
+		let sl = msort ul in (
+			print_string "Lista ordenada:\n";
+			print_list sl
+		)
+	)
+)
+$
+
+main unit$

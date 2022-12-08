@@ -38,6 +38,10 @@ type term =
   | TmHead of ty * term
   | TmTail of ty * term
   | TmUnit
+  | TmPrtNat of term
+  | TmPrtStr of term
+  | TmRdNat of term
+  | TmRdStr of term
 ;;
 
 type vcontext =
@@ -45,9 +49,11 @@ type vcontext =
 ;;
 
 type command = 
-    Eval of term
+    Ignore
+  | Eval of term
   | Bind of string * term
 ;;
+
 
 
 (* CONTEXT MANAGEMENT *)
@@ -275,10 +281,46 @@ let rec typeof tctx tm =
     (* T-Unit *)
   | TmUnit ->
       TyUnit
+
+    (* T-PrintNat *)
+  | TmPrtNat t1 ->
+      if typeof tctx t1 <: TyNat then TyUnit
+      else raise (Type_error "argument of print_nat is not a number")
+
+    (* T-PrintStr *)
+  | TmPrtStr t1 ->
+      if typeof tctx t1 <: TyStr then TyUnit
+      else raise (Type_error "argument of print_string is not a string")
+
+    (* T-ReadNat *)
+  | TmRdNat t1 ->
+      if typeof tctx t1 <: TyUnit then TyNat
+      else raise (Type_error "argument of read_nat is not a number")
+
+    (* T-ReadStr *)
+  | TmRdStr t1 ->
+      if typeof tctx t1 <: TyUnit then TyStr
+      else raise (Type_error "argument of read_string is not a string")
 ;;
 
 
 (* TERMS MANAGEMENT (EVALUATION) *)
+
+let deformat s =
+  let rec aux s = function
+      [] -> s
+    | (chr,str)::tl ->
+      aux (String.concat str (String.split_on_char chr s)) tl
+  in let chrToStrL =
+    [('\n', "\\n");
+     ('\r', "\\r");
+     ('\b', "\\b");
+     ('\t', "\\t");
+     ('\\', "\\\\");
+     ('"', "\\\"")]
+  in
+    aux s chrToStrL
+;;
 
 let rec string_of_term = function
     TmTrue ->
@@ -312,7 +354,7 @@ let rec string_of_term = function
   | TmFix t ->
       "(fix " ^ string_of_term t ^ ")"
   | TmStr s ->
-      "\"" ^ s ^ "\""
+      "\"" ^ deformat s ^ "\""
   | TmStrCat (t1, t2) ->
       "(" ^ string_of_term t1 ^ ") ^ (" ^ string_of_term t2 ^ ")"
   | TmRcd [] ->
@@ -355,6 +397,14 @@ let rec string_of_term = function
       "tail[" ^ string_of_ty ty ^ "] " ^ "(" ^ string_of_term t ^ ")"
   | TmUnit ->
       "unit"
+  | TmPrtNat t -> 
+      "print_nat " ^ "(" ^ string_of_term t ^ ")"
+  | TmPrtStr t ->
+      "print_string " ^ "(" ^ string_of_term t ^ ")"
+  | TmRdNat t ->
+      "read_nat " ^ "(" ^ string_of_term t ^ ")"
+  | TmRdStr t ->
+      "read_string " ^ "(" ^ string_of_term t ^ ")" 
 ;;
 
 let rec ldif l1 l2 = match l1 with
@@ -413,7 +463,14 @@ let rec free_vars tm = match tm with
       free_vars t1
   | TmUnit ->
       []
-
+  | TmPrtNat t1 -> 
+      free_vars t1
+  | TmPrtStr t1 ->
+      free_vars t1
+  | TmRdNat t1 ->
+      free_vars t1
+  | TmRdStr t1 ->
+      free_vars t1
 ;;
 
 let rec fresh_name x l =
@@ -476,6 +533,14 @@ let rec subst x s tm = match tm with
       TmTail (ty, subst x s t1)
   | TmUnit ->
       TmUnit
+  | TmPrtNat t1 -> 
+      TmPrtNat (subst x s t1)
+  | TmPrtStr t1 ->
+      TmPrtStr (subst x s t1)
+  | TmRdNat t1 ->
+      TmRdNat (subst x s t1)
+  | TmRdStr t1 ->
+      TmRdStr (subst x s t1)
 ;;
 
 let rec isnumericval tm = match tm with
@@ -494,6 +559,7 @@ let rec isval tm = match tm with
                    List.for_all isval tmL -> true
   | TmNil _ -> true
   | TmCons (_, t1, t2) when isval t1 && isval t2 -> true
+  | TmUnit -> true
   | _ -> false
 ;;
 
@@ -654,8 +720,51 @@ let rec eval1 vctx tm = match tm with
 
     (* E-Tail *)
   | TmTail (ty, t1) ->
-    let t1' = eval1 vctx t1 in
+      let t1' = eval1 vctx t1 in
       TmTail (ty, t1')
+
+    (* E-PrintNat1 *)
+  | TmPrtNat t1 when isnumericval t1 ->
+      let rec f = function
+          TmZero -> 0
+        | TmSucc tm -> 1+(f tm)
+        | _ -> -1
+      in print_int (f t1); TmUnit;
+
+    (* E-PrintNat *)
+  | TmPrtNat t1 ->
+      let t1' = eval1 vctx t1 in
+      TmPrtNat t1'
+
+    (* E-PrintString1 *)
+  | TmPrtStr (TmStr s) ->
+      print_string s; TmUnit
+
+    (* E-PrintString *)
+  | TmPrtStr t1 ->
+      let t1' = eval1 vctx t1 in
+      TmPrtStr t1'
+
+    (* E-ReadNat1 *)
+  | TmRdNat t1 when isval t1 ->
+      let rec f = function
+          0 -> TmZero
+        | n -> TmSucc (f (n-1))
+      in f (read_int ())
+
+    (* E-ReadNat *)
+  | TmRdNat t1 ->
+      let t1' = eval1 vctx t1 in
+      TmRdNat t1'
+
+    (* E-ReadString1 *)
+  | TmRdStr t1 when isval t1 ->
+      TmStr (read_line ())
+
+    (* E-ReadString *)
+  | TmRdStr t1 ->
+      let t1' = eval1 vctx t1 in
+      TmRdStr t1'
 
   | TmVar s ->
       getvbinding vctx s
@@ -677,7 +786,25 @@ let rec eval vctx tm =
 ;;
 
 let execute (vctx, tctx) = function
-    Eval tm ->
+    Ignore ->
+      (vctx, tctx)
+
+  | Eval tm ->
+      let _ = typeof tctx tm in
+      let _ = eval vctx tm in 
+      (vctx, tctx)
+
+  | Bind (s, tm) ->
+      let tyTm = typeof tctx tm in
+      let tm' = eval vctx tm in
+      (addvbinding vctx s tm', addtbinding tctx s tyTm)
+;;
+
+let executeAndPrint (vctx, tctx) = function
+    Ignore ->
+      (vctx, tctx)
+
+  | Eval tm ->
       let tyTm = typeof tctx tm in
       let tm' = eval vctx tm in 
       print_endline ("- : " ^ string_of_ty tyTm
@@ -693,4 +820,3 @@ let execute (vctx, tctx) = function
       flush stdout;
       (addvbinding vctx s tm', addtbinding tctx s tyTm)
 ;;
-

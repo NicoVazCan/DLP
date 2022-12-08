@@ -33,6 +33,10 @@
 %token LIST
 %token UNIT
 %token UNIT_TY
+%token P_NAT
+%token P_STRING
+%token R_NAT
+%token R_STRING
 %token DOT
 %token COMMA
 %token DOT_COMMA
@@ -51,7 +55,8 @@
 %%
 
 s :
-    STRINGV EQ seqTerm EOF
+      { Ignore }
+  | STRINGV EQ seqTerm EOF
       { Bind ($1, $3) }
   | seqTerm EOF
       { Eval $1 }
@@ -133,6 +138,14 @@ appTerm :
       { TmHead ($2, $3)}
   | TAIL listTy projTerm
       { TmTail ($2, $3)}
+  | P_NAT projTerm
+      { TmPrtNat $2 }
+  | P_STRING projTerm
+      { TmPrtStr $2 }
+  | R_NAT projTerm
+      { TmRdNat $2 }
+  | R_STRING projTerm
+      { TmRdStr $2 }
 
 srtCatTerm:
     srtCatTerm STRCAT projTerm
@@ -145,7 +158,7 @@ listTy:
       { $2 }
 
 atomicTerm :
-    LPAREN term RPAREN
+    LPAREN seqTerm RPAREN
       { $2 }
   | TRUE
       { TmTrue }

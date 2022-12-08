@@ -36,6 +36,10 @@ type term =
   | TmHead of ty * term
   | TmTail of ty * term
   | TmUnit
+  | TmPrtNat of term
+  | TmPrtStr of term
+  | TmRdNat of term
+  | TmRdStr of term
 ;;
 
 type vcontext =
@@ -43,7 +47,8 @@ type vcontext =
 ;;
 
 type command = 
-    Eval of term
+    Ignore
+  | Eval of term
   | Bind of string * term
 ;;
 
@@ -64,4 +69,5 @@ exception NoRuleApplies;;
 val eval : vcontext -> term -> term;;
 
 val execute: vcontext * tcontext -> command -> vcontext * tcontext;;
+val executeAndPrint: vcontext * tcontext -> command -> vcontext * tcontext;;
 
