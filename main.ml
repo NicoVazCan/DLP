@@ -6,6 +6,14 @@ open Lambda;;
 open Parser;;
 open Lexer;;
 
+%
+Para la implementación del apartado 1.1 el archivo ha recibido los siguientes cambios:
+- Se ha añadido la variable "del" con el valor "4", cuya función es indicar el final
+  de una expresión para que no se procese el resto de entrada en caso de haberla.
+- Se ha implementado la función recursiva "inner_loop", que va analizando la entrada
+  hasta encontrar al caracter que se corresponde con la variable "del"
+%
+
 let del = '$';;
 
 let top_level_loop () =
