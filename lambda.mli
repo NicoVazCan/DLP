@@ -60,13 +60,9 @@ val emptyvctx : vcontext;;
 val addvbinding : vcontext -> string -> term -> vcontext;;
 val getvbinding : vcontext -> string -> term;;
 
-val string_of_ty : ty -> string;;
 exception Type_error of string;;
-val typeof : tcontext -> term -> ty;;
 
-val string_of_term : term -> string;;
 exception NoRuleApplies;;
-val eval : vcontext -> term -> term;;
 
 val execute: vcontext * tcontext -> command -> vcontext * tcontext;;
 val executeAndPrint: vcontext * tcontext -> command -> vcontext * tcontext;;
