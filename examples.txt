@@ -46,6 +46,41 @@ in
 *)$
 
 
+(* Funciones recursivas *)$
+prod = letrec aux:Nat->Nat->Nat->Nat = L n1:Nat. L n2:Nat. L n3:Nat.
+  if iszero n2 then 0
+  else
+    if iszero n1 then (aux n3 (pred n2) n3)
+    else
+      succ (aux (pred n1) n2 n3)
+in L n1:Nat. L n2:Nat.
+  aux n1 n2 n1
+$
+
+sum = letrec aux:Nat->Nat->Nat = L n1:Nat. L n2:Nat.
+  if iszero n1 then n2
+  else
+    succ (aux (pred n1) n2)
+in aux
+$
+
+fib = letrec aux:Nat->Nat = L n:Nat.
+  if iszero n then n
+  else
+    if iszero (pred n) then n
+    else
+      sum (aux (pred n)) (aux (pred (pred n)))
+in aux
+$
+
+fact = letrec aux:Nat->Nat = L n:Nat.
+  if iszero n then 1
+  else
+    prod n (aux (pred n))
+in aux
+$
+
+
 (* Funciones con listas *)$
 
 length = letrec aux:(List Nat)->(Nat->Nat) = L l:List Nat. L n:Nat.

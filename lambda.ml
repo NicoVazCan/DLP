@@ -425,15 +425,21 @@ let print_term =
       TmIf (t1,t2,t3) ->
         print_string "if";
         print_space ();
-        print_tm t1;
+        open_box 1;
+          print_tm t1;
+        close_box ();
         print_space ();
         print_string "then";
         print_space ();
-        print_tm t2;
+        open_box 1;
+          print_tm t2;
+        close_box ();
         print_space ();
         print_string "else";
         print_space ();
-        print_tm t3;
+        open_box 1;
+          print_tm t3;
+        close_box ();
         ()
     | TmAbs (s, tyS, t) ->
         open_box 1;
@@ -454,11 +460,15 @@ let print_term =
         print_space ();
         print_char '=';
         print_space ();
-        print_tm t1;
+        open_box 1;
+          print_tm t1;
+        close_box ();
         print_space ();
         print_string "in";
         print_space ();
-        print_tm t2;
+        open_box 1;
+          print_tm t2;
+        close_box ();
         ()
     | TmFix t ->
         open_box 1;
@@ -1058,7 +1068,10 @@ let rec eval1 vctx tm = match tm with
           TmZero -> 0
         | TmSucc tm -> 1+(f tm)
         | _ -> -1
-      in print_int (f t1); TmUnit;
+      in
+        print_int (f t1);
+        print_flush ();
+        TmUnit
 
     (* E-PrintNat *)
   | TmPrtNat t1 ->
@@ -1067,7 +1080,9 @@ let rec eval1 vctx tm = match tm with
 
     (* E-PrintString1 *)
   | TmPrtStr (TmStr s) ->
-      print_string s; TmUnit
+      print_string s;
+      print_flush ();
+      TmUnit
 
     (* E-PrintString *)
   | TmPrtStr t1 ->
