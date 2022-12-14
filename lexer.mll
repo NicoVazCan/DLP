@@ -21,7 +21,7 @@
 }
 
 rule token = parse
-    [' ' '\t'] | "(*" _* "*)" 
+    [' ' '\t' '\n'] | "(*" _?('*'[^')'] | [^'*']_)* "*)" 
                 { token lexbuf }
   | "lambda"    { LAMBDA }
   | "L"         { LAMBDA }

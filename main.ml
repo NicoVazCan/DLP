@@ -6,13 +6,13 @@ open Lambda;;
 open Parser;;
 open Lexer;;
 
-%
+(*
 Para la implementación del apartado 1.1 el archivo ha recibido los siguientes cambios:
 - Se ha añadido la variable "del" con el valor "4", cuya función es indicar el final
   de una expresión para que no se procese el resto de entrada en caso de haberla.
 - Se ha implementado la función recursiva "inner_loop", que va analizando la entrada
   hasta encontrar al caracter que se corresponde con la variable "del"
-%
+*)
 
 let del = '$';;
 
@@ -24,7 +24,7 @@ let top_level_loop () =
     
     let rec inner_loop cmd =
         let line = read_line () in
-        let cmd' = cmd ^ " " ^ (List.hd (String.split_on_char del line)) in
+        let cmd' = cmd ^ "\n" ^ (List.hd (String.split_on_char del line)) in
         if String.contains line del then
           let tm = s token (from_string cmd') in
           loop (executeAndPrint ctxs tm)
