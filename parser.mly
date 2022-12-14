@@ -25,6 +25,9 @@ las expresiones recursivas del apartado 2.1*)
 %token RPAREN
 %token LBRACE
 %token RBRACE
+(*Se han añadido los tokens "LBRACK", "RBRACK" y "COMMA" 
+en el lexer con el fin de identificar los caracteres de los
+pares, tuplas y registros de los apartados 2.4, 2.5 y 2.6*)
 %token LBRACK
 %token RBRACK
 %token NIL
@@ -83,6 +86,9 @@ apartado 2.1, para adaptar Fix al lenguaje tipado*)
   | LETREC STRINGV COLON ty EQ term IN term
       { TmLetIn ($2, TmFix (TmAbs ($2, $4, $6)), $8) }
 
+(*Se han creado projTerm, posTerms y fieldTerms. El primero para
+poder ejecutar la proyección, el segundo para capturar los elementos
+de una tupla, y el tercero para capturar el tag y los términos de un registro*)
 projTerm :
     atomicTerm
       { $1 }
@@ -120,6 +126,8 @@ fieldTerms :
       { ($1, $3)::[] }
 
 appTerm :
+(*Se ha añadido la capacidad de trabajar con proj, LBRACK y RBRACK
+a appTerm para el desarrollo de los apartados 2.4, 2.5 y 2.6*)
     projTerm
       { $1 }
   | SUCC projTerm

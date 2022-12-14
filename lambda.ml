@@ -104,6 +104,8 @@ let rec string_of_ty ty = match ty with
       "(" ^ string_of_ty ty1 ^ ")" ^ " -> " ^ "(" ^ string_of_ty ty2 ^ ")"
   | TyStr ->
       "String"
+(*Se ha añadido la capacidad de identificar tuplas y registros a la 
+función string_of_ty para el desarrollo de los apartados 2.5 y 2.6*)
   | TyRcd [] ->
       "{}"
   | TyRcd tyL when isnat (fst (List.hd tyL)) ->
@@ -314,6 +316,8 @@ typeof para el apartado 2.3*)
         else raise (Type_error "right argument of ^ is not a string")
       else raise (Type_error "left argument of ^ is not a string")
 
+(*Se ha añadido la capacidad de matchear con Rcd y Proj a la función 
+typeof para los apartados 2.4, 2.5 y 2.6*)
     (* T-Tuple/T-Rcd*)
   | TmRcd fdL ->
       let fnL, tmL = List.split fdL in
@@ -793,6 +797,8 @@ para el desarrollo del apartado 2.1*)
       []
   | TmStrCat (t1, t2) ->
       lunion (free_vars t1) (free_vars t2)
+(*Se ha añadido la posibilidad de trabajar con Rcd y Proj
+ a free_vars para el desarrollo de los apartados 2.4, 2.5, 2.6*) 
   | TmRcd fdL ->
       let _, tmL = List.split fdL in
       List.fold_left lunion [] (List.map free_vars tmL)
@@ -867,6 +873,8 @@ para el desarrollo del apartado 2.3*)
       TmStr st
   | TmStrCat (t1, t2) ->
       TmStrCat (subst x s t1, subst x s t2)
+(*Se ha añadido la posibilidad de trabajar con Rcd y Proj a subst
+para el desarrollo de los apartados 2.4, 2.5 y 2.6*) 
   | TmRcd fdL ->
       let fnL, tmL = List.split fdL in
       TmRcd (List.combine fnL (List.map (subst x s) tmL))
@@ -908,6 +916,8 @@ let rec isval tm = match tm with
 (*Se ha añadido la posibilidad de trabajar con Str a isval
 para el desarrollo del apartado 2.3*) 
   | TmStr _ -> true
+(*Se ha añadido la posibilidad de trabajar con Rcd a isval
+para el desarrollo de los apartados 2.4, 2.5 y 2.6*) 
   | TmRcd fdL when let _, tmL = List.split fdL in
                    List.for_all isval tmL -> true
   | TmNil _ -> true
@@ -1022,6 +1032,9 @@ para la posibilidad de que lo sea el segundo*)
       let t1' = eval1 vctx t1 in
       TmStrCat (t1', t2)
 
+(*Se ha añadido la posibilidad de trabajar con Rcd y Proj a eval1
+para el desarrollo de los apartados 2.4, 2.5 y 2.6. En el caso de 
+Proj hay dos posibilidades, una evalua, y la otra ejecuta la proyección*)
     (* E-Tuple/E-Rcd *)
   | TmRcd fdL when not (isval tm) ->
       let rec rcd_deep_eval tm = match tm with
@@ -1166,6 +1179,15 @@ let execute (vctx, tctx) = function
       let tm' = eval vctx tm in
       (addvbinding vctx s tm', addtbinding tctx s tyTm)
 ;;
+
+(*Para realizar el apartado 1.2, se realizó las funciones; 'print_term', para mostrar
+el valor de un término pero eliminado todos los paréntesis posibles mediante funciones 
+recursivas que imitan el recorrido del arbol formado por la gramatica; 'print_ty',
+para mostrar el tipo de un término de la misma forma que la anterior función; y 
+pretty_printer', que llama a estas dos funciones para mostrar el resultado de evaluar
+el término insertado. Estas funciones usan el módulo 'Format' para imprimir en la
+salida estándar con una correcta indentización mediante una estructura basada en
+bloques.*)
 
 let pretty_printer s tyTm tm' =
   open_box 1;

@@ -5,6 +5,7 @@ type ty =
   | TyArr of ty * ty
 (*Se ha añadido el tipo String para el desarrollo del apartado 2.3*)
   | TyStr
+(*Se ha añadido el tipo Registro para el desarrollo del apartado 2.4, 2.5 y 2.6*)
   | TyRcd of (string * ty) list
   | TyList of ty
   | TyUnit
@@ -32,6 +33,7 @@ type term =
   | TmStr of string
 (*Se ha añadido el término StrCat para el desarrollo del apartado 2.3*)
   | TmStrCat of term * term
+(*Se ha añadido los términos TmRcd y TmProj para el desarrollo de los apartado 2.4, 2.5 y 2.6*)
   | TmRcd of (string * term) list
   | TmProj of term * string
   | TmNil of ty

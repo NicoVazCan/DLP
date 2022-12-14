@@ -50,6 +50,9 @@ de identificar las concatenaciones del apartado 2.3*)
   | ')'         { RPAREN }
   | '{'         { LBRACE }
   | '}'         { RBRACE }
+(*Se han añadido los operadores "LBRACK", "RBRACK" y "COMMA" 
+en el lexer con el fin de identificar los caracteres de los
+pares, tuplas y registros de los apartados 2.4, 2.5 y 2.6*)
   | '['         { LBRACK }
   | ']'         { RBRACK }
   | "nil"       { NIL }
