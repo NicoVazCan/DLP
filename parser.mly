@@ -40,6 +40,9 @@ pares, tuplas y registros de los apartados 2.4, 2.5 y 2.6*/
 %token HEAD
 %token TAIL
 %token LIST
+(*Se han añadido los tokens "UNIT", "UNIT_TY" y "DOT_COMMA"
+en el lexer con el fin de identificar los caracteres de las
+listas del apartado 2.9*)
 %token UNIT
 %token UNIT_TY
 %token P_NAT
@@ -63,6 +66,8 @@ pares, tuplas y registros de los apartados 2.4, 2.5 y 2.6*/
 
 %%
 
+(*Se ha creado una expresión para formar secuencias de Términos
+(apartado 2.9)*)
 s :
       { Ignore }
   | STRINGV EQ seqTerm EOF
@@ -202,6 +207,7 @@ atomicTerm :
       { TmNil $4 }
   | LBRACE RBRACE
       { TmRcd [] }
+(*Se ha añadido el término Unit para el desarrollo del apartado 2.9*)
   | UNIT
       { TmUnit }
 
@@ -229,6 +235,7 @@ atomicTy :
       { TyRcd [] }
   | brackTy
       { $1 }
+(*Se ha añadido el tipo Unit para el desarrollo del apartado 2.9*)
   | UNIT_TY
       { TyUnit }
 
