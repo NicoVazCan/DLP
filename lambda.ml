@@ -114,6 +114,8 @@ función string_of_ty para el desarrollo de los apartados 2.5 y 2.6*)
   | TyRcd tyL ->
       let sFdL = List.map (fun (fn, ty) -> fn ^ ":" ^ string_of_ty ty) tyL in
       "{" ^ (String.concat ", " sFdL) ^ "}"
+(*Se ha añadido la capacidad de identificar listas a la 
+función string_of_ty para el desarrollo del apartado 2.7*)
   | TyList ty ->
       "List " ^ (string_of_ty ty)
   | TyUnit ->
@@ -206,6 +208,10 @@ and print_atomicTy = function
 exception Type_error of string
 ;;
 
+(*Para implementar el apartado 2.8 se creo la función interfija
+'<:' que se usará en 'typeof' para comprobar si un tipo es subtipo
+de otro. La función consiste en la aplicación recursiva de las reglas
+de subtipado de abstracciones y registros.*)
 let rec typeof tctx tm = 
   let rec (<:) s t = match s, t with
         (* Basic typing rule *)
@@ -334,6 +340,8 @@ typeof para los apartados 2.4, 2.5 y 2.6*)
         | _ ->
           raise (Type_error ("can not project type " ^ string_of_ty tyT1)))
 
+(*Se ha añadido la capacidad de matchear con Nil, Cons, IsNil, Head y
+Tail a la función typeof para el apartado 2.7*)
     (* T-IsNil *)
   | TmNil ty ->
       TyList ty
@@ -804,6 +812,8 @@ para el desarrollo del apartado 2.1*)
       List.fold_left lunion [] (List.map free_vars tmL)
   | TmProj (t1, _) ->
       free_vars t1
+(*Se ha añadido la posibilidad de trabajar con Nil, Cons, IsNil, Head
+y Tail a free_vars para el desarrollo del apartado 2.7*)
   | TmNil _ ->
       []
   | TmCons (_, t1, t2) ->
@@ -884,6 +894,8 @@ para el desarrollo de los apartados 2.4, 2.5 y 2.6*)
       TmNil ty
   | TmCons (ty, t1, t2) ->
       TmCons (ty, subst x s t1, subst x s t2)
+(*Se ha añadido la posibilidad de trabajar con Nil, Cons, IsNil, Head
+y Tail a subst para el desarrollo del apartado 2.7*) 
   | TmIsNil (ty, t1) ->
       TmIsNil (ty, subst x s t1)
   | TmHead (ty, t1) ->
@@ -920,6 +932,8 @@ para el desarrollo del apartado 2.3*)
 para el desarrollo de los apartados 2.4, 2.5 y 2.6*) 
   | TmRcd fdL when let _, tmL = List.split fdL in
                    List.for_all isval tmL -> true
+(*Se ha añadido la posibilidad de trabajar con Nil y Cons a isval
+para el desarrollo del apartado 2.7*) 
   | TmNil _ -> true
   | TmCons (_, t1, t2) when isval t1 && isval t2 -> true
   | TmUnit -> true
@@ -1056,6 +1070,15 @@ Proj hay dos posibilidades, una evalua, y la otra ejecuta la proyección*)
   | TmProj (t1, fn) ->
       let t1' = eval1 vctx t1 in
       TmProj (t1', fn)
+
+(*Se ha añadido la posibilidad de trabajar con Cons, Nil, IsNil, Head y
+Tail a eval1 para el desarrollo del apartado 2.7. En el caso de 
+Cons hay dos posibilidades, una evalua el primer término antes del segundo,
+y la otra a la inversa. En IsNil tenemos también tres posibilidades; la
+que se diferencian en función de si la lista que recibe es vacía, llena
+o el caso restante. En Head y Tail tenemos dos posibilidades; en una si el
+término es una lista devolverá la cabeza o la cola (correspondientemente)
+y en la otra se evalua el término*)
 
     (* E-Cons2 *)
   | TmCons (ty, t1, t2) when isval t1 ->

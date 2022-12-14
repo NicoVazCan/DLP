@@ -23,6 +23,10 @@ las expresiones recursivas del apartado 2.1*)
 %token STRCAT
 %token LPAREN
 %token RPAREN
+(*Se han añadido los tokens "LBRACE", "RBRACE", "LBRACK",
+"RBRACK", "NIL", "CONS", "ISNIL", "HEAD", "TAIL", "LIST"
+en el lexer con el fin de identificar los caracteres de las
+listas del apartado 2.7*)
 %token LBRACE
 %token RBRACE
 (*Se han añadido los tokens "LBRACK", "RBRACK" y "COMMA" 
@@ -104,8 +108,7 @@ brackTerm:
       { TmRcd (List.combine (List.init (List.length $2) string_of_int) $2) }
   | LBRACE fieldTerms RBRACE
       { TmRcd $2}
-  | LBRACK RBRACK COLON ty
-      { TmNil $4 }
+(*Por comodidad las listas se pueden indicar como en la mayoría de lenguajes*)
   | LBRACK posTerms RBRACK COLON ty
       { List.fold_left (fun t1 t2 -> TmCons ($5, t2, t1)) (TmNil $5) (List.rev $2) }
 
@@ -139,6 +142,9 @@ a appTerm para el desarrollo de los apartados 2.4, 2.5 y 2.6*)
   | appTerm projTerm
       { TmApp ($1, $2) }
 
+(*Se ha añadido la capacidad de trabajar con "LBRACE", "RBRACE", "LBRACK",
+"RBRACK", "NIL", "CONS", "ISNIL", "HEAD", "TAIL" y "LIST"
+a appTerm para el desarrollo del apartado 2.7*)
   | srtCatTerm STRCAT projTerm
       { TmStrCat ($1, $3) }
   | CONS listTy projTerm projTerm
@@ -164,6 +170,8 @@ srtCatTerm:
   | projTerm
       { $1 }
 
+(*Término para indicar el tipo de la lista entregada al appterm
+(apartado 2.7)*)
 listTy:
     LBRACK ty RBRACK
       { $2 }
@@ -187,6 +195,9 @@ atomicTerm :
       { TmStr $1 }
   | NIL listTy
       { TmNil $2 }
+(*Por comodidad las listas se pueden indicar como en la mayoría de lenguajes*)
+  | LBRACK RBRACK COLON ty
+      { TmNil $4 }
   | LBRACE RBRACE
       { TmRcd [] }
   | UNIT

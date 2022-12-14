@@ -48,6 +48,10 @@ de identificar las concatenaciones del apartado 2.3*)
   | '^'         { STRCAT }
   | '('         { LPAREN }
   | ')'         { RPAREN }
+(*Se han añadido los operadores "LBRACE", "RBRACE", "LBRACK",
+"RBRACK", "NIL", "CONS", "ISNIL", "HEAD", "TAIL", "LIST"
+en el lexer con el fin de identificar los caracteres de las
+listas del apartado 2.7*)
   | '{'         { LBRACE }
   | '}'         { RBRACE }
 (*Se han añadido los operadores "LBRACK", "RBRACK" y "COMMA" 
