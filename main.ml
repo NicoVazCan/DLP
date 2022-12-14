@@ -14,6 +14,18 @@ Para la implementación del apartado 1.1 el archivo ha recibido los siguientes c
   hasta encontrar al caracter que se corresponde con la variable "del"
 *)
 
+(*Explicar la implementación del contexto global y porque se hizo así:
+	La implementación del contexto global se consiguió mediante la adición:
+		·Dos expresiones axiomáticas a la gramática; una de definición, en la que primero se evalúa el término introducido y luego se le asigna el resultante a la variable escogida; y otra de evaluación, que unicamente evalúa el término.
+		·Otro contexto para almacenar los tipos de las variables globales definidas, aparte del contexto de valores, y así no tener que inferirlo cada vez que se menciona alguna variable global.
+		·Una función llamada 'execute' en 'lambda.ml' que, dependiendo de la expresión escogida entre las dos previamente mencionadas, se añade a los contextos el tipo y valor correspondiente a la variable definida para luego devolverlos, aparte de evaluar e inferir el tipo del término.
+		·Una función llamada 'apply_ctx' en 'lambda.ml' que, después de evaluar completamente el término entregado a alguna de las dos expresiones previamente mencionadas, se sustituyen las variables libres de este por su valor correspondiente en el contexto de valores.
+		·Se modificó las funciones 'eval' y 'eval1' de 'lambda.ml' para contener el contexto de valores y poder devolver el valor corespondiente a las variables globales que aparezcan en el término que se le entregue.
+		·Finalmente se modificó la función 'loop' en 'main.ml' para únicamente aplicar la nueva función 'execute'.
+	Las razones por las que se decidió implementar el contexto global de esta manera fueron:
+		·Sencillez; al mantener el tipo de cada variable global en un contexto de tipos separado del de valores, facilita la tarea de implementación y de rendimiento, aunque a costa de la memoria al guardar los nombres de las variables dos veces para cada contexto y así poder acceder su valor o su tipo.
+		·Fue el primero que entendimos, por lo que, a falta de tiempo, decidimos continuar con esta implementación.*)
+
 let del = '$';;
 
 let top_level_loop () =
