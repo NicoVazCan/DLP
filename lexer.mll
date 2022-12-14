@@ -65,6 +65,9 @@ pares, tuplas y registros de los apartados 2.4, 2.5 y 2.6*)
   | "head"      { HEAD }
   | "tail"      { TAIL }
   | "List"      { LIST }
+(*Se han añadido los operadores "UNIT", "UNIT_TY" y "DOT_COMMA"
+en el lexer con el fin de identificar los caracteres de las
+listas del apartado 2.9*)
   | "unit"      { UNIT }
   | "Unit"      { UNIT_TY }
   | "print_nat" { P_NAT }

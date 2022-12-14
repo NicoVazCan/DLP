@@ -9,6 +9,7 @@ type ty =
   | TyRcd of (string * ty) list
 (*Se ha añadido el tipo Lista para el desarrollo del apartado 2.7*)
   | TyList of ty
+(*Se ha añadido el tipo Unit para el desarrollo del apartado 2.9*)
   | TyUnit
 ;;
 
@@ -43,6 +44,7 @@ type term =
   | TmIsNil of ty * term
   | TmHead of ty * term
   | TmTail of ty * term
+(*Se ha añadido el término Unit para el desarrollo del apartado 2.9*)
   | TmUnit
   | TmPrtNat of term
   | TmPrtStr of term

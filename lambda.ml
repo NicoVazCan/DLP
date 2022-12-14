@@ -118,6 +118,8 @@ función string_of_ty para el desarrollo de los apartados 2.5 y 2.6*)
 función string_of_ty para el desarrollo del apartado 2.7*)
   | TyList ty ->
       "List " ^ (string_of_ty ty)
+(*Se ha añadido la capacidad de identificar expresiones Unit a la 
+función string_of_ty para el desarrollo del apartado 2.9*)
   | TyUnit ->
       "Unit"  
 ;;
@@ -378,6 +380,8 @@ Tail a la función typeof para el apartado 2.7*)
       else raise (Type_error ("argument of tail is not a " ^
                               (string_of_ty ty) ^ "list"))
 
+(*Se ha añadido la capacidad de matchear con Unit a la
+función typeof para el apartado 2.9*)
     (* T-Unit *)
   | TmUnit ->
       TyUnit
@@ -824,6 +828,8 @@ y Tail a free_vars para el desarrollo del apartado 2.7*)
       free_vars t1
   | TmTail (_, t1) ->
       free_vars t1
+(*Se ha añadido la posibilidad de trabajar con Unit a 
+free_vars para el desarrollo del apartado 2.9*)
   | TmUnit ->
       []
   | TmPrtNat t1 -> 
@@ -902,6 +908,8 @@ y Tail a subst para el desarrollo del apartado 2.7*)
       TmHead (ty, subst x s t1)
   | TmTail (ty, t1) ->
       TmTail (ty, subst x s t1)
+(*Se ha añadido la posibilidad de trabajar con Unit a subst para
+el desarrollo del apartado 2.9*) 
   | TmUnit ->
       TmUnit
   | TmPrtNat t1 -> 
