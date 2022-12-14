@@ -40,7 +40,11 @@ de identificar las expresiones recursivas del apartado 2.1*)
   | "in"        { IN }
   | "Bool"      { BOOL }
   | "Nat"       { NAT }
+(*Se ha añadido la palabra "String" en el lexer con el fin
+de identificar los strings del apartado 2.3*)
   | "String"    { STRING }
+(*Se ha añadido el operador "^" en el lexer con el fin
+de identificar las concatenaciones del apartado 2.3*)
   | '^'         { STRCAT }
   | '('         { LPAREN }
   | ')'         { RPAREN }
@@ -71,6 +75,9 @@ de identificar las expresiones recursivas del apartado 2.1*)
   | ['0'-'9']+  { INTV (int_of_string (Lexing.lexeme lexbuf)) }
   | ['a'-'z']['a'-'z' '_' '0'-'9']*
                 { STRINGV (Lexing.lexeme lexbuf) }
+(*Se ha implementado esta opción en el escáner para identificar
+literales de String (apartado 2.3) ya que pueden aparecer caracteres especiales
+y tienen que ser traducidos a su caracter correspondiente*)
   | '"'
                 { Buffer.clear string_buff;
                   string lexbuf;

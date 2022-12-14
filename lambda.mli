@@ -3,6 +3,7 @@ type ty =
     TyBool
   | TyNat
   | TyArr of ty * ty
+(*Se ha añadido el tipo String para el desarrollo del apartado 2.3*)
   | TyStr
   | TyRcd of (string * ty) list
   | TyList of ty
@@ -25,9 +26,11 @@ type term =
   | TmAbs of string * ty * term
   | TmApp of term * term
   | TmLetIn of string * term * term
-(*Se ha añadido el tipo Fix para el desarrollo del apartado 2.1*)
+(*Se ha añadido el término Fix para el desarrollo del apartado 2.1*)
   | TmFix of term
+(*Se ha añadido el término Str para el desarrollo del apartado 2.3*)
   | TmStr of string
+(*Se ha añadido el término StrCat para el desarrollo del apartado 2.3*)
   | TmStrCat of term * term
   | TmRcd of (string * term) list
   | TmProj of term * string

@@ -29,7 +29,6 @@ type term =
   | TmAbs of string * ty * term
   | TmApp of term * term
   | TmLetIn of string * term * term
-(*Se ha añadido el tipo Fix para el apartado 2.1*)
   | TmFix of term
   | TmStr of string
   | TmStrCat of term * term
@@ -302,6 +301,8 @@ typeof para el apartado 2.1*)
             else raise (Type_error "result of body not compatible with domain")
         | _ -> raise (Type_error "arrow type expected"))
 
+(*Se ha añadido la capacidad de matchear con Str y StrCat a la función 
+typeof para el apartado 2.3*)
     (* T-String *)
   | TmStr _ -> 
       TyStr
@@ -786,6 +787,8 @@ let rec free_vars tm = match tm with
 para el desarrollo del apartado 2.1*) 
   | TmFix t ->
       free_vars t
+(*Se ha añadido la posibilidad de trabajar con Str y StrCat
+ a free_vars para el desarrollo del apartado 2.3*) 
   | TmStr s ->
       []
   | TmStrCat (t1, t2) ->
@@ -858,6 +861,8 @@ let rec subst x s tm = match tm with
 para el desarrollo del apartado 2.1*) 
   | TmFix t ->
       TmFix (subst x s t)
+(*Se ha añadido la posibilidad de trabajar con Str y StrCat a subst
+para el desarrollo del apartado 2.3*) 
   | TmStr st ->
       TmStr st
   | TmStrCat (t1, t2) ->
@@ -900,6 +905,8 @@ let rec isval tm = match tm with
   | TmFalse -> true
   | TmAbs _ -> true
   | t when isnumericval t -> true
+(*Se ha añadido la posibilidad de trabajar con Str a isval
+para el desarrollo del apartado 2.3*) 
   | TmStr _ -> true
   | TmRcd fdL when let _, tmL = List.split fdL in
                    List.for_all isval tmL -> true
@@ -993,6 +1000,11 @@ aplicar el Fix*)
       let t1' = eval1 vctx t1 in
       TmFix t1'
 
+(*Se ha añadido la posibilidad de trabajar con StrCat a eval1
+para el desarrollo del apartado 2.3. Se han implementado tres
+posibilidades, una para ejecutar la concatenación, otra para
+la posibilidad de que el primer término sea ya string, y otra
+para la posibilidad de que lo sea el segundo*)
     (* E-StrCat *)
   | TmStrCat (t1, t2) when isval t1 && isval t2 ->
       (match t1, t2 with
