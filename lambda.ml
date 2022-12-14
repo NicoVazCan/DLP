@@ -380,7 +380,7 @@ Tail a la función typeof para el apartado 2.7*)
       else raise (Type_error ("argument of tail is not a " ^
                               (string_of_ty ty) ^ "list"))
 
-(*Se ha añadido la capacidad de matchear con Unit a la
+(*Se ha añadido la capacidad de tipar Unit a la
 función typeof para el apartado 2.9*)
     (* T-Unit *)
   | TmUnit ->
@@ -829,7 +829,7 @@ y Tail a free_vars para el desarrollo del apartado 2.7*)
       free_vars t1
   | TmTail (_, t1) ->
       free_vars t1
-(*Se ha añadido la posibilidad de trabajar con Unit a 
+(*Se ha añadido la posibilidad de obtener las variables libres de Unit a 
 free_vars para el desarrollo del apartado 2.9*)
   | TmUnit ->
       []
@@ -911,7 +911,7 @@ y Tail a subst para el desarrollo del apartado 2.7*)
       TmHead (ty, subst x s t1)
   | TmTail (ty, t1) ->
       TmTail (ty, subst x s t1)
-(*Se ha añadido la posibilidad de trabajar con Unit a subst para
+(*Se ha añadido la posibilidad de sustituir una variable en Unit a subst para
 el desarrollo del apartado 2.9*) 
   | TmUnit ->
       TmUnit
@@ -949,6 +949,8 @@ para el desarrollo de los apartados 2.4, 2.5 y 2.6*)
 para el desarrollo del apartado 2.7*) 
   | TmNil _ -> true
   | TmCons (_, t1, t2) when isval t1 && isval t2 -> true
+(*Se ha añadido la posibilidad de afirmar que Unit es un valor a isval para
+el desarrollo del apartado 2.9*) 
   | TmUnit -> true
   | _ -> false
 ;;
