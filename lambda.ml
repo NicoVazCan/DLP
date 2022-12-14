@@ -104,8 +104,8 @@ let rec string_of_ty ty = match ty with
       "(" ^ string_of_ty ty1 ^ ")" ^ " -> " ^ "(" ^ string_of_ty ty2 ^ ")"
   | TyStr ->
       "String"
-(*Se ha añadido la capacidad de identificar tuplas y registros a la 
-función string_of_ty para el desarrollo de los apartados 2.5 y 2.6*)
+(*The ability to identify tuples and records has been added to the 
+string_of_ty function for the development of sections 2.5 and 2.6.*)
   | TyRcd [] ->
       "{}"
   | TyRcd tyL when isnat (fst (List.hd tyL)) ->
@@ -114,12 +114,12 @@ función string_of_ty para el desarrollo de los apartados 2.5 y 2.6*)
   | TyRcd tyL ->
       let sFdL = List.map (fun (fn, ty) -> fn ^ ":" ^ string_of_ty ty) tyL in
       "{" ^ (String.concat ", " sFdL) ^ "}"
-(*Se ha añadido la capacidad de identificar listas a la 
-función string_of_ty para el desarrollo del apartado 2.7*)
+(*The ability to identify lists has been added to the 
+string_of_ty function for the development of section 2.7*)
   | TyList ty ->
       "List " ^ (string_of_ty ty)
-(*Se ha añadido la capacidad de identificar expresiones Unit a la 
-función string_of_ty para el desarrollo del apartado 2.9*)
+(*The ability to identify Unit expressions has been added to the 
+function string_of_ty for the development of section 2.9*)
   | TyUnit ->
       "Unit"  
 ;;
@@ -210,10 +210,10 @@ and print_atomicTy = function
 exception Type_error of string
 ;;
 
-(*Para implementar el apartado 2.8 se creo la función interfija
-'<:' que se usará en 'typeof' para comprobar si un tipo es subtipo
-de otro. La función consiste en la aplicación recursiva de las reglas
-de subtipado de abstracciones y registros.*)
+(*To implement section 2.8, we created the interleaved function
+'<:' to be used in 'typeof' to check if a type is a subtype of another type.
+of another. The function consists of the recursive application of the rules for subtyping
+rules for subtyping abstractions and records.*)
 let rec typeof tctx tm = 
   let rec (<:) s t = match s, t with
         (* Basic typing rule *)
@@ -300,8 +300,8 @@ let rec typeof tctx tm =
       let tctx' = addtbinding tctx x tyT1 in
       typeof tctx' t2
 
-(*Se ha añadido la capacidad de tipar Fix a la función 
-typeof para el apartado 2.1*)
+(*The ability to type Fix has been added to the function 
+typeof function for section 2.1*)
     (* T-Fix *)
   | TmFix t1 ->
       let tyT1 = typeof tctx t1 in
@@ -311,8 +311,8 @@ typeof para el apartado 2.1*)
             else raise (Type_error "result of body not compatible with domain")
         | _ -> raise (Type_error "arrow type expected"))
 
-(*Se ha añadido la capacidad de tipar Str y StrCat a la función 
-typeof para el apartado 2.3*)
+(*The ability to type Str and StrCat has been added to the function 
+typeof function for section 2.3*)
     (* T-String *)
   | TmStr _ -> 
       TyStr
@@ -324,8 +324,8 @@ typeof para el apartado 2.3*)
         else raise (Type_error "right argument of ^ is not a string")
       else raise (Type_error "left argument of ^ is not a string")
 
-(*Se ha añadido la capacidad de tipar Rcd y Proj a la función 
-typeof para los apartados 2.4, 2.5 y 2.6*)
+(*The ability to type Rcd and Proj has been added to the function 
+typeof function for sections 2.4, 2.5 and 2.6.*)
     (* T-Tuple/T-Rcd*)
   | TmRcd fdL ->
       let fnL, tmL = List.split fdL in
@@ -342,8 +342,8 @@ typeof para los apartados 2.4, 2.5 y 2.6*)
         | _ ->
           raise (Type_error ("can not project type " ^ string_of_ty tyT1)))
 
-(*Se ha añadido la capacidad de tipar Nil, Cons, IsNil, Head y
-Tail a la función typeof para el apartado 2.7*)
+(*Added the ability to type Nil, Cons, IsNil, Head, and
+Tail to the typeof function for section 2.7*)
     (* T-IsNil *)
   | TmNil ty ->
       TyList ty
@@ -380,13 +380,13 @@ Tail a la función typeof para el apartado 2.7*)
       else raise (Type_error ("argument of tail is not a " ^
                               (string_of_ty ty) ^ "list"))
 
-(*Se ha añadido la capacidad de tipar Unit a la
-función typeof para el apartado 2.9*)
+(*The ability to type Unit has been added to the
+typeof function for section 2.9*)
     (* T-Unit *)
   | TmUnit ->
       TyUnit
-(*Se ha añadido la capacidad de tipar PrintStr, ReadNat, ReadStr, ReadStr 
-a la función typeof para el apartado 2.10*)
+(*Added the ability to type PrintStr, ReadNat, ReadStr, ReadStr, ReadStr 
+to the typeof function for Section 2.10*)
     (* T-PrintNat *)
   | TmPrtNat t1 ->
       if typeof tctx t1 <: TyNat then TyUnit
@@ -800,25 +800,25 @@ let rec free_vars tm = match tm with
       lunion (free_vars t1) (free_vars t2)
   | TmLetIn (s, t1, t2) ->
       lunion (ldif (free_vars t2) [s]) (free_vars t1)
-(*Se ha añadido la posibilidad de obtener las variables libres de Fix a free_vars
-para el desarrollo del apartado 2.1*) 
+(*The possibility of obtaining the free variables from Fix has been added to free_vars
+for the development of section 2.1*) 
   | TmFix t ->
       free_vars t
-(*Se ha añadido la posibilidad de obtener las variables libres de Str y StrCat
- a free_vars para el desarrollo del apartado 2.3*) 
+(*The possibility of obtaining the free Str and StrCat variables has been added to free_vars
+ to free_vars for the development of section 2.3*) 
   | TmStr s ->
       []
   | TmStrCat (t1, t2) ->
       lunion (free_vars t1) (free_vars t2)
-(*Se ha añadido la posibilidad de obtener las variables libres de Rcd y Proj
- a free_vars para el desarrollo de los apartados 2.4, 2.5, 2.6*) 
+(*The possibility of obtaining the free variables from Rcd and Proj
+ to free_vars for the development of sections 2.4, 2.5, 2.6*) 
   | TmRcd fdL ->
       let _, tmL = List.split fdL in
       List.fold_left lunion [] (List.map free_vars tmL)
   | TmProj (t1, _) ->
       free_vars t1
-(*Se ha añadido la posibilidad de obtener las variables libres de Nil, Cons, IsNil, Head
-y Tail a free_vars para el desarrollo del apartado 2.7*)
+(*The possibility of obtaining the free variables of Nil, Cons, IsNil, Head
+and Tail to free_vars for the development of section 2.7*)
   | TmNil _ ->
       []
   | TmCons (_, t1, t2) ->
@@ -829,12 +829,12 @@ y Tail a free_vars para el desarrollo del apartado 2.7*)
       free_vars t1
   | TmTail (_, t1) ->
       free_vars t1
-(*Se ha añadido la posibilidad de obtener las variables libres de Unit a 
-free_vars para el desarrollo del apartado 2.9*)
+(*The possibility of obtaining the free variables from Unit has been added to 
+free_vars for the development of section 2.9*)
   | TmUnit ->
       []
-(*Se ha añadido la posibilidad de obtener las variables libres de Nil, Cons, IsNil, Head
-y Tail a free_vars para el desarrollo del apartado 2.10*)
+(*The possibility of obtaining the free variables Nil, Cons, IsNil, Head and Tail has been added to free_vars for the development of section 2.10.
+and Tail to free_vars for the development of section 2.10*)
   | TmPrtNat t1 -> 
       free_vars t1
   | TmPrtStr t1 ->
@@ -882,18 +882,18 @@ let rec subst x s tm = match tm with
            then TmLetIn (y, subst x s t1, subst x s t2)
            else let z = fresh_name y (free_vars t2 @ fvs) in
                 TmLetIn (z, subst x s t1, subst x s (subst y (TmVar z) t2))
-(*Se ha añadido la posibilidad de sustituir una variable en Fix a subst
-para el desarrollo del apartado 2.1*) 
+(*The possibility of substituting a variable in Fix a subst has been added.
+for the development of section 2.1*) 
   | TmFix t ->
       TmFix (subst x s t)
-(*Se ha añadido la posibilidad de sustituir una variable en Str y StrCat a subst
-para el desarrollo del apartado 2.3*) 
+(*The possibility of substituting a variable in Str and StrCat a subst has been added.
+for the development of section 2.3*) 
   | TmStr st ->
       TmStr st
   | TmStrCat (t1, t2) ->
       TmStrCat (subst x s t1, subst x s t2)
-(*Se ha añadido la posibilidad de sustituir una variable en Rcd y Proj a subst
-para el desarrollo de los apartados 2.4, 2.5 y 2.6*) 
+(*The possibility of substituting a variable in Rcd and Proj a subst has been added.
+has been added for the development of sections 2.4, 2.5 and 2.6.*) 
   | TmRcd fdL ->
       let fnL, tmL = List.split fdL in
       TmRcd (List.combine fnL (List.map (subst x s) tmL))
@@ -903,20 +903,20 @@ para el desarrollo de los apartados 2.4, 2.5 y 2.6*)
       TmNil ty
   | TmCons (ty, t1, t2) ->
       TmCons (ty, subst x s t1, subst x s t2)
-(*Se ha añadido la posibilidad de sustituir una variable en Nil, Cons, IsNil, Head
-y Tail a subst para el desarrollo del apartado 2.7*) 
+(*The possibility of substituting a variable in Nil, Cons, IsNil, Head and Tail a subst has been added for the development of section 2.7.
+and Tail a subst for the development of section 2.7*) 
   | TmIsNil (ty, t1) ->
       TmIsNil (ty, subst x s t1)
   | TmHead (ty, t1) ->
       TmHead (ty, subst x s t1)
   | TmTail (ty, t1) ->
       TmTail (ty, subst x s t1)
-(*Se ha añadido la posibilidad de sustituir una variable en Unit a subst para
-el desarrollo del apartado 2.9*) 
+(*The possibility of substituting a variable in Unit a subst has been added for
+the development of section 2.9*) 
   | TmUnit ->
       TmUnit
-(*Se ha añadido la posibilidad de sustituir una variable en Nil, Cons, IsNil, Head
-y Tail a free_vars para el desarrollo del apartado 2.10*)
+(*The possibility of substituting a variable in Nil, Cons, IsNil, Head
+and Tail to free_vars for the development of section 2.10*)
   | TmPrtNat t1 -> 
       TmPrtNat (subst x s t1)
   | TmPrtStr t1 ->
@@ -938,19 +938,19 @@ let rec isval tm = match tm with
   | TmFalse -> true
   | TmAbs _ -> true
   | t when isnumericval t -> true
-(*Se ha añadido la posibilidad de afirmar que Str es un valor a isval
-para el desarrollo del apartado 2.3*) 
+(*The possibility of stating that Str is a value has been added to isval
+for the development of section 2.3*) 
   | TmStr _ -> true
-(*Se ha añadido la posibilidad de afirmar que Rcd es un valor a isval
-para el desarrollo de los apartados 2.4, 2.5 y 2.6*) 
+(*The possibility of asserting that Rcd is a value to isval
+for the development of sections 2.4, 2.5 and 2.6.*) 
   | TmRcd fdL when let _, tmL = List.split fdL in
                    List.for_all isval tmL -> true
-(*Se ha añadido la posibilidad de afirmar que Nil y Cons son valores a isval
-para el desarrollo del apartado 2.7*) 
+(*The possibility of asserting that Nil and Cons are values to isval has been added.
+for the development of section 2.7*) 
   | TmNil _ -> true
   | TmCons (_, t1, t2) when isval t1 && isval t2 -> true
-(*Se ha añadido la posibilidad de afirmar que Unit es un valor a isval para
-el desarrollo del apartado 2.9*) 
+(*The possibility of asserting that Unit is a value to isval has been added for
+the development of section 2.9*) 
   | TmUnit -> true
   | _ -> false
 ;;
@@ -1026,10 +1026,10 @@ let rec eval1 vctx tm = match tm with
       let t1' = eval1 vctx t1 in
       TmLetIn (x, t1', t2) 
 
-(*Se ha añadido la posibilidad de trabajar con Fix a eval1
-para el desarrollo del apartado 2.1. Se han implementado dos
-posibilidades, una para trabajar con abstracciones y otra para
-aplicar el Fix*)
+(*The possibility of working with Fix has been added to eval1 for the development of section 2.1.
+has been added to eval1 for the development of section 2.1.
+one to work with abstractions and the other to apply Fix to eval1.
+applying the Fix*)
     (* E-FixBeta *)
   | TmFix (TmAbs (x, _, t12)) ->
       subst x tm t12 
@@ -1039,11 +1039,11 @@ aplicar el Fix*)
       let t1' = eval1 vctx t1 in
       TmFix t1'
 
-(*Se ha añadido la posibilidad de trabajar con StrCat a eval1
-para el desarrollo del apartado 2.3. Se han implementado tres
-posibilidades, una para ejecutar la concatenación, otra para
-la posibilidad de que el primer término sea ya string, y otra
-para la posibilidad de que lo sea el segundo*)
+(*The possibility of working with StrCat has been added to eval1
+has been added to eval1 for the development of section 2.3.
+one for concatenation, one for the possibility that the first term is already a string, and one for the
+the possibility that the first term is already string, and another for the possibility that the second term is string.
+for the possibility that the second term is already a string*)
     (* E-StrCat *)
   | TmStrCat (t1, t2) when isval t1 && isval t2 ->
       (match t1, t2 with
@@ -1061,9 +1061,9 @@ para la posibilidad de que lo sea el segundo*)
       let t1' = eval1 vctx t1 in
       TmStrCat (t1', t2)
 
-(*Se ha añadido la posibilidad de trabajar con Rcd y Proj a eval1
-para el desarrollo de los apartados 2.4, 2.5 y 2.6. En el caso de 
-Proj hay dos posibilidades, una evalua, y la otra ejecuta la proyección*)
+(*The possibility to work with Rcd and Proj has been added to eval1
+for the development of sections 2.4, 2.5 and 2.6. In the case of 
+Proj there are two possibilities, one evaluates, the other executes the projection.*)
     (* E-Tuple/E-Rcd *)
   | TmRcd fdL when not (isval tm) ->
       let rec rcd_deep_eval tm = match tm with
@@ -1086,14 +1086,14 @@ Proj hay dos posibilidades, una evalua, y la otra ejecuta la proyección*)
       let t1' = eval1 vctx t1 in
       TmProj (t1', fn)
 
-(*Se ha añadido la posibilidad de trabajar con Cons, Nil, IsNil, Head y
-Tail a eval1 para el desarrollo del apartado 2.7. En el caso de 
-Cons hay dos posibilidades, una evalua el primer término antes del segundo,
-y la otra a la inversa. En IsNil tenemos también tres posibilidades; la
-que se diferencian en función de si la lista que recibe es vacía, llena
-o el caso restante. En Head y Tail tenemos dos posibilidades; en una si el
-término es una lista devolverá la cabeza o la cola (correspondientemente)
-y en la otra se evalua el término*)
+(*The possibility to work with Cons, Nil, IsNil, Head and Tail has been added to eval1 for the development of section 2.7.
+Tail to eval1 for the development of section 2.7. In the case of 
+Cons there are two possibilities, one evaluates the first term before the second,
+and the other the other way around. In IsNil we also have three possibilities; the
+which differ depending on whether the list it receives is empty, full, or the remaining case.
+or the remaining case. In Head and Tail we have two possibilities; in one if the
+term is a list it will return the head or the tail (correspondingly) and in the other one the
+and the other evaluates the term*)
 
     (* E-Cons2 *)
   | TmCons (ty, t1, t2) when isval t1 ->
@@ -1136,8 +1136,8 @@ y en la otra se evalua el término*)
       let t1' = eval1 vctx t1 in
       TmTail (ty, t1')
 
-(*Se ha añadido la posibilidad de evaluar los terminos entregados a
-print_nat y después imprimilos (apartado 2.10)*)
+(*We have added the possibility to evaluate the terms delivered to
+print_nat and then print them (section 2.10)*)
     (* E-PrintNat1 *)
   | TmPrtNat t1 when isnumericval t1 ->
       let rec f = function
@@ -1154,8 +1154,8 @@ print_nat y después imprimilos (apartado 2.10)*)
       let t1' = eval1 vctx t1 in
       TmPrtNat t1'
 
-(*Se ha añadido la posibilidad de evaluar los terminos entregados a
-print_string y después imprimilos (apartado 2.10)*)
+(*Added the possibility to evaluate the terms given to
+print_string and then print them out (section 2.10)*)
     (* E-PrintString1 *)
   | TmPrtStr (TmStr s) ->
       print_string s;
@@ -1167,8 +1167,8 @@ print_string y después imprimilos (apartado 2.10)*)
       let t1' = eval1 vctx t1 in
       TmPrtStr t1'
 
-(*Se ha añadido la posibilidad de evaluar los terminos entregados a
-read_nat, y leer terminos para devolverlos (apartado 2.10)*)
+(*Added the possibility to evaluate the terms given to
+read_nat, and read terms to return them (section 2.10).*)
     (* E-ReadNat1 *)
   | TmRdNat t1 when isval t1 ->
       let rec f = function
@@ -1181,8 +1181,8 @@ read_nat, y leer terminos para devolverlos (apartado 2.10)*)
       let t1' = eval1 vctx t1 in
       TmRdNat t1'
 
-(*Se ha añadido la posibilidad de evaluar los terminos entregados a
-read_string, y leer terminos para devolverlos (apartado 2.10)*)
+(*Added the possibility to evaluate terms given to read_string, and read terms to return them (section 2.10).
+read_string, and read terms to return them (section 2.10).*)
     (* E-ReadString1 *)
   | TmRdStr t1 when isval t1 ->
       TmStr (read_line ())
@@ -1226,14 +1226,14 @@ let execute (vctx, tctx) = function
       (addvbinding vctx s tm', addtbinding tctx s tyTm)
 ;;
 
-(*Para realizar el apartado 1.2, se realizó las funciones; 'print_term', para mostrar
-el valor de un término pero eliminado todos los paréntesis posibles mediante funciones 
-recursivas que imitan el recorrido del arbol formado por la gramatica; 'print_ty',
-para mostrar el tipo de un término de la misma forma que la anterior función; y 
-pretty_printer', que llama a estas dos funciones para mostrar el resultado de evaluar
-el término insertado. Estas funciones usan el módulo 'Format' para imprimir en la
-salida estándar con una correcta indentización mediante una estructura basada en
-bloques.*)
+(*To carry out section 1.2, the functions 'print_term', to display the value of a term, but eliminating all possible parentheses using functions
+the value of a term but eliminating all possible parentheses by means of recursive functions that imitate the 
+recursive functions that mimic the path of the tree formed by the grammar; 'print_ty',
+to display the type of a term in the same way as the previous function; and 
+pretty_printer', which calls these two functions to display the result of evaluating the inserted term.
+the inserted term. These functions use the 'Format' module to print to standard output with a correct indentization.
+standard output with correct indentization using a block-based structure.
+block-based structure.*)
 
 let pretty_printer s tyTm tm' =
   open_box 1;

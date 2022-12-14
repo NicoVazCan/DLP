@@ -7,24 +7,23 @@ open Parser;;
 open Lexer;;
 
 (*
-Para la implementación del apartado 1.1 el archivo ha recibido los siguientes cambios:
-- Se ha añadido la variable "del" con el valor "4", cuya función es indicar el final
-  de una expresión para que no se procese el resto de entrada en caso de haberla.
-- Se ha implementado la función recursiva "inner_loop", que va analizando la entrada
-  hasta encontrar al caracter que se corresponde con la variable "del"
+For the implementation of section 1.1 the file has received the following changes:
+- The variable "del" with the value "4" has been added, whose function is to indicate the end of
+  of an expression so that the rest of the input is not processed if there is any.
+- The recursive function "inner_loop" has been implemented.
+  until it finds the character that corresponds to the variable "del".
 *)
 
-(*Explicar la implementación del contexto global y porque se hizo así:
-	La implementación del contexto global se consiguió mediante la adición:
-		·Dos expresiones axiomáticas a la gramática; una de definición, en la que primero se evalúa el término introducido y luego se le asigna el resultante a la variable escogida; y otra de evaluación, que unicamente evalúa el término.
-		·Otro contexto para almacenar los tipos de las variables globales definidas, aparte del contexto de valores, y así no tener que inferirlo cada vez que se menciona alguna variable global.
-		·Una función llamada 'execute' en 'lambda.ml' que, dependiendo de la expresión escogida entre las dos previamente mencionadas, se añade a los contextos el tipo y valor correspondiente a la variable definida para luego devolverlos, aparte de evaluar e inferir el tipo del término.
-		·Una función llamada 'apply_ctx' en 'lambda.ml' que, después de evaluar completamente el término entregado a alguna de las dos expresiones previamente mencionadas, se sustituyen las variables libres de este por su valor correspondiente en el contexto de valores.
-		·Se modificó las funciones 'eval' y 'eval1' de 'lambda.ml' para contener el contexto de valores y poder devolver el valor corespondiente a las variables globales que aparezcan en el término que se le entregue.
-		·Finalmente se modificó la función 'loop' en 'main.ml' para únicamente aplicar la nueva función 'execute'.
-	Las razones por las que se decidió implementar el contexto global de esta manera fueron:
-		·Sencillez; al mantener el tipo de cada variable global en un contexto de tipos separado del de valores, facilita la tarea de implementación y de rendimiento, aunque a costa de la memoria al guardar los nombres de las variables dos veces para cada contexto y así poder acceder su valor o su tipo.
-		·Fue el primero que entendimos, por lo que, a falta de tiempo, decidimos continuar con esta implementación.*)
+(*The implementation of the global context was achieved by adding:
+		-Two axiomatic expressions to the grammar; one for definition, in which the entered term is first evaluated and then the resultant is assigned to the chosen variable; and one for evaluation, which only evaluates the term.
+		-Another context to store the types of the defined global variables, apart from the value context, so as not to have to infer it every time a global variable is mentioned.
+		-A function called 'execute' in 'lambda.ml' that, depending on the expression chosen between the two previously mentioned, adds to the contexts the type and value corresponding to the defined variable and then returns them, apart from evaluating and inferring the type of the term.
+		-A function called 'apply_ctx' in 'lambda.ml' that, after fully evaluating the term delivered to one of the two previously mentioned expressions, the free variables of this one are replaced by their corresponding value in the value context.
+		-The 'eval' and 'eval1' functions of 'lambda.ml' were modified to contain the value context and to be able to return the value corresponding to the global variables that appear in the term given to it.
+		-Finally, the 'loop' function in 'main.ml' was modified to only apply the new 'execute' function.
+	The reasons why it was decided to implement the global context in this way were:
+		-Simplicity; by keeping the type of each global variable in a separate type context from the value context, it makes the implementation and performance task easier, albeit at the cost of memory by storing the variable names twice for each context to access their value or type.
+		-It was the first one we understood, so, for lack of time, we decided to continue with this implementation.*)
 
 let del = '$';;
 
