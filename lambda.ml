@@ -298,7 +298,7 @@ let rec typeof tctx tm =
       let tctx' = addtbinding tctx x tyT1 in
       typeof tctx' t2
 
-(*Se ha añadido la capacidad de matchear con Fix a la función 
+(*Se ha añadido la capacidad de tipar Fix a la función 
 typeof para el apartado 2.1*)
     (* T-Fix *)
   | TmFix t1 ->
@@ -309,7 +309,7 @@ typeof para el apartado 2.1*)
             else raise (Type_error "result of body not compatible with domain")
         | _ -> raise (Type_error "arrow type expected"))
 
-(*Se ha añadido la capacidad de matchear con Str y StrCat a la función 
+(*Se ha añadido la capacidad de tipar Str y StrCat a la función 
 typeof para el apartado 2.3*)
     (* T-String *)
   | TmStr _ -> 
@@ -322,7 +322,7 @@ typeof para el apartado 2.3*)
         else raise (Type_error "right argument of ^ is not a string")
       else raise (Type_error "left argument of ^ is not a string")
 
-(*Se ha añadido la capacidad de matchear con Rcd y Proj a la función 
+(*Se ha añadido la capacidad de tipar Rcd y Proj a la función 
 typeof para los apartados 2.4, 2.5 y 2.6*)
     (* T-Tuple/T-Rcd*)
   | TmRcd fdL ->
@@ -340,7 +340,7 @@ typeof para los apartados 2.4, 2.5 y 2.6*)
         | _ ->
           raise (Type_error ("can not project type " ^ string_of_ty tyT1)))
 
-(*Se ha añadido la capacidad de matchear con Nil, Cons, IsNil, Head y
+(*Se ha añadido la capacidad de tipar Nil, Cons, IsNil, Head y
 Tail a la función typeof para el apartado 2.7*)
     (* T-IsNil *)
   | TmNil ty ->
@@ -381,7 +381,8 @@ Tail a la función typeof para el apartado 2.7*)
     (* T-Unit *)
   | TmUnit ->
       TyUnit
-
+(*Se ha añadido la capacidad de tipar PrintStr, ReadNat, ReadStr, ReadStr 
+a la función typeof para el apartado 2.10*)
     (* T-PrintNat *)
   | TmPrtNat t1 ->
       if typeof tctx t1 <: TyNat then TyUnit
@@ -795,24 +796,24 @@ let rec free_vars tm = match tm with
       lunion (free_vars t1) (free_vars t2)
   | TmLetIn (s, t1, t2) ->
       lunion (ldif (free_vars t2) [s]) (free_vars t1)
-(*Se ha añadido la posibilidad de trabajar con Fix a free_vars
+(*Se ha añadido la posibilidad de obtener las variables libres de Fix a free_vars
 para el desarrollo del apartado 2.1*) 
   | TmFix t ->
       free_vars t
-(*Se ha añadido la posibilidad de trabajar con Str y StrCat
+(*Se ha añadido la posibilidad de obtener las variables libres de Str y StrCat
  a free_vars para el desarrollo del apartado 2.3*) 
   | TmStr s ->
       []
   | TmStrCat (t1, t2) ->
       lunion (free_vars t1) (free_vars t2)
-(*Se ha añadido la posibilidad de trabajar con Rcd y Proj
+(*Se ha añadido la posibilidad de obtener las variables libres de Rcd y Proj
  a free_vars para el desarrollo de los apartados 2.4, 2.5, 2.6*) 
   | TmRcd fdL ->
       let _, tmL = List.split fdL in
       List.fold_left lunion [] (List.map free_vars tmL)
   | TmProj (t1, _) ->
       free_vars t1
-(*Se ha añadido la posibilidad de trabajar con Nil, Cons, IsNil, Head
+(*Se ha añadido la posibilidad de obtener las variables libres de Nil, Cons, IsNil, Head
 y Tail a free_vars para el desarrollo del apartado 2.7*)
   | TmNil _ ->
       []
@@ -826,6 +827,8 @@ y Tail a free_vars para el desarrollo del apartado 2.7*)
       free_vars t1
   | TmUnit ->
       []
+(*Se ha añadido la posibilidad de obtener las variables libres de Nil, Cons, IsNil, Head
+y Tail a free_vars para el desarrollo del apartado 2.10*)
   | TmPrtNat t1 -> 
       free_vars t1
   | TmPrtStr t1 ->
@@ -873,17 +876,17 @@ let rec subst x s tm = match tm with
            then TmLetIn (y, subst x s t1, subst x s t2)
            else let z = fresh_name y (free_vars t2 @ fvs) in
                 TmLetIn (z, subst x s t1, subst x s (subst y (TmVar z) t2))
-(*Se ha añadido la posibilidad de trabajar con Fix a subst
+(*Se ha añadido la posibilidad de sustituir una variable en Fix a subst
 para el desarrollo del apartado 2.1*) 
   | TmFix t ->
       TmFix (subst x s t)
-(*Se ha añadido la posibilidad de trabajar con Str y StrCat a subst
+(*Se ha añadido la posibilidad de sustituir una variable en Str y StrCat a subst
 para el desarrollo del apartado 2.3*) 
   | TmStr st ->
       TmStr st
   | TmStrCat (t1, t2) ->
       TmStrCat (subst x s t1, subst x s t2)
-(*Se ha añadido la posibilidad de trabajar con Rcd y Proj a subst
+(*Se ha añadido la posibilidad de sustituir una variable en Rcd y Proj a subst
 para el desarrollo de los apartados 2.4, 2.5 y 2.6*) 
   | TmRcd fdL ->
       let fnL, tmL = List.split fdL in
@@ -894,7 +897,7 @@ para el desarrollo de los apartados 2.4, 2.5 y 2.6*)
       TmNil ty
   | TmCons (ty, t1, t2) ->
       TmCons (ty, subst x s t1, subst x s t2)
-(*Se ha añadido la posibilidad de trabajar con Nil, Cons, IsNil, Head
+(*Se ha añadido la posibilidad de sustituir una variable en Nil, Cons, IsNil, Head
 y Tail a subst para el desarrollo del apartado 2.7*) 
   | TmIsNil (ty, t1) ->
       TmIsNil (ty, subst x s t1)
@@ -904,6 +907,8 @@ y Tail a subst para el desarrollo del apartado 2.7*)
       TmTail (ty, subst x s t1)
   | TmUnit ->
       TmUnit
+(*Se ha añadido la posibilidad de sustituir una variable en Nil, Cons, IsNil, Head
+y Tail a free_vars para el desarrollo del apartado 2.10*)
   | TmPrtNat t1 -> 
       TmPrtNat (subst x s t1)
   | TmPrtStr t1 ->
@@ -925,14 +930,14 @@ let rec isval tm = match tm with
   | TmFalse -> true
   | TmAbs _ -> true
   | t when isnumericval t -> true
-(*Se ha añadido la posibilidad de trabajar con Str a isval
+(*Se ha añadido la posibilidad de afirmar que Str es un valor a isval
 para el desarrollo del apartado 2.3*) 
   | TmStr _ -> true
-(*Se ha añadido la posibilidad de trabajar con Rcd a isval
+(*Se ha añadido la posibilidad de afirmar que Rcd es un valor a isval
 para el desarrollo de los apartados 2.4, 2.5 y 2.6*) 
   | TmRcd fdL when let _, tmL = List.split fdL in
                    List.for_all isval tmL -> true
-(*Se ha añadido la posibilidad de trabajar con Nil y Cons a isval
+(*Se ha añadido la posibilidad de afirmar que Nil y Cons son valores a isval
 para el desarrollo del apartado 2.7*) 
   | TmNil _ -> true
   | TmCons (_, t1, t2) when isval t1 && isval t2 -> true
@@ -1121,6 +1126,8 @@ y en la otra se evalua el término*)
       let t1' = eval1 vctx t1 in
       TmTail (ty, t1')
 
+(*Se ha añadido la posibilidad de evaluar los terminos entregados a
+print_nat y después imprimilos (apartado 2.10)*)
     (* E-PrintNat1 *)
   | TmPrtNat t1 when isnumericval t1 ->
       let rec f = function
@@ -1137,6 +1144,8 @@ y en la otra se evalua el término*)
       let t1' = eval1 vctx t1 in
       TmPrtNat t1'
 
+(*Se ha añadido la posibilidad de evaluar los terminos entregados a
+print_string y después imprimilos (apartado 2.10)*)
     (* E-PrintString1 *)
   | TmPrtStr (TmStr s) ->
       print_string s;
@@ -1148,6 +1157,8 @@ y en la otra se evalua el término*)
       let t1' = eval1 vctx t1 in
       TmPrtStr t1'
 
+(*Se ha añadido la posibilidad de evaluar los terminos entregados a
+read_nat, y leer terminos para devolverlos (apartado 2.10)*)
     (* E-ReadNat1 *)
   | TmRdNat t1 when isval t1 ->
       let rec f = function
@@ -1160,6 +1171,8 @@ y en la otra se evalua el término*)
       let t1' = eval1 vctx t1 in
       TmRdNat t1'
 
+(*Se ha añadido la posibilidad de evaluar los terminos entregados a
+read_string, y leer terminos para devolverlos (apartado 2.10)*)
     (* E-ReadString1 *)
   | TmRdStr t1 when isval t1 ->
       TmStr (read_line ())

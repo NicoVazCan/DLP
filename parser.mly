@@ -13,8 +13,8 @@
 %token PRED
 %token ISZERO
 %token LET
-(*Se ha añadido el token "LETREC" con el fin de identificar
-las expresiones recursivas del apartado 2.1*)
+/*Se ha añadido el token "LETREC" con el fin de identificar
+las expresiones recursivas del apartado 2.1*/
 %token LETREC
 %token IN
 %token BOOL
@@ -23,15 +23,15 @@ las expresiones recursivas del apartado 2.1*)
 %token STRCAT
 %token LPAREN
 %token RPAREN
-(*Se han añadido los tokens "LBRACE", "RBRACE", "LBRACK",
+/*Se han añadido los tokens "LBRACE", "RBRACE", "LBRACK",
 "RBRACK", "NIL", "CONS", "ISNIL", "HEAD", "TAIL", "LIST"
 en el lexer con el fin de identificar los caracteres de las
-listas del apartado 2.7*)
+listas del apartado 2.7*/
 %token LBRACE
 %token RBRACE
-(*Se han añadido los tokens "LBRACK", "RBRACK" y "COMMA" 
+/*Se han añadido los tokens "LBRACK", "RBRACK" y "COMMA" 
 en el lexer con el fin de identificar los caracteres de los
-pares, tuplas y registros de los apartados 2.4, 2.5 y 2.6*)
+pares, tuplas y registros de los apartados 2.4, 2.5 y 2.6*/
 %token LBRACK
 %token RBRACK
 %token NIL
@@ -85,14 +85,14 @@ term :
       { TmAbs ($2, $4, $6) }
   | LET STRINGV EQ term IN term
       { TmLetIn ($2, $4, $6) }
-(*Se ha añadido esta sintxis para el funcionamiento del
-apartado 2.1, para adaptar Fix al lenguaje tipado*)
+/*Se ha añadido esta sintxis para el funcionamiento del
+apartado 2.1, para adaptar Fix al lenguaje tipado*/
   | LETREC STRINGV COLON ty EQ term IN term
       { TmLetIn ($2, TmFix (TmAbs ($2, $4, $6)), $8) }
 
-(*Se han creado projTerm, posTerms y fieldTerms. El primero para
+/*Se han creado projTerm, posTerms y fieldTerms. El primero para
 poder ejecutar la proyección, el segundo para capturar los elementos
-de una tupla, y el tercero para capturar el tag y los términos de un registro*)
+de una tupla, y el tercero para capturar el tag y los términos de un registro*/
 projTerm :
     atomicTerm
       { $1 }
@@ -108,7 +108,7 @@ brackTerm:
       { TmRcd (List.combine (List.init (List.length $2) string_of_int) $2) }
   | LBRACE fieldTerms RBRACE
       { TmRcd $2}
-(*Por comodidad las listas se pueden indicar como en la mayoría de lenguajes*)
+/*Por comodidad las listas se pueden indicar como en la mayoría de lenguajes*/
   | LBRACK posTerms RBRACK COLON ty
       { List.fold_left (fun t1 t2 -> TmCons ($5, t2, t1)) (TmNil $5) (List.rev $2) }
 
@@ -129,8 +129,8 @@ fieldTerms :
       { ($1, $3)::[] }
 
 appTerm :
-(*Se ha añadido la capacidad de trabajar con proj, LBRACK y RBRACK
-a appTerm para el desarrollo de los apartados 2.4, 2.5 y 2.6*)
+/*Se ha añadido la capacidad de trabajar con proj, LBRACK y RBRACK
+a appTerm para el desarrollo de los apartados 2.4, 2.5 y 2.6*/
     projTerm
       { $1 }
   | SUCC projTerm
@@ -142,9 +142,9 @@ a appTerm para el desarrollo de los apartados 2.4, 2.5 y 2.6*)
   | appTerm projTerm
       { TmApp ($1, $2) }
 
-(*Se ha añadido la capacidad de trabajar con "LBRACE", "RBRACE", "LBRACK",
+/*Se ha añadido la capacidad de trabajar con "LBRACE", "RBRACE", "LBRACK",
 "RBRACK", "NIL", "CONS", "ISNIL", "HEAD", "TAIL" y "LIST"
-a appTerm para el desarrollo del apartado 2.7*)
+a appTerm para el desarrollo del apartado 2.7*/
   | srtCatTerm STRCAT projTerm
       { TmStrCat ($1, $3) }
   | CONS listTy projTerm projTerm
@@ -155,6 +155,8 @@ a appTerm para el desarrollo del apartado 2.7*)
       { TmHead ($2, $3)}
   | TAIL listTy projTerm
       { TmTail ($2, $3)}
+/*Se ha añadido la capacidad de trabajar con P_NAT, P_STRING, R_NAT, y
+R_STRING a appTerm para el desarrollo del apartado 2.10*/
   | P_NAT projTerm
       { TmPrtNat $2 }
   | P_STRING projTerm
@@ -170,8 +172,8 @@ srtCatTerm:
   | projTerm
       { $1 }
 
-(*Término para indicar el tipo de la lista entregada al appterm
-(apartado 2.7)*)
+/*Término para indicar el tipo de la lista entregada al appterm
+(apartado 2.7)*/
 listTy:
     LBRACK ty RBRACK
       { $2 }
@@ -195,7 +197,7 @@ atomicTerm :
       { TmStr $1 }
   | NIL listTy
       { TmNil $2 }
-(*Por comodidad las listas se pueden indicar como en la mayoría de lenguajes*)
+/*Por comodidad las listas se pueden indicar como en la mayoría de lenguajes*/
   | LBRACK RBRACK COLON ty
       { TmNil $4 }
   | LBRACE RBRACE

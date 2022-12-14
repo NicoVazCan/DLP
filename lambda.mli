@@ -44,6 +44,8 @@ type term =
   | TmHead of ty * term
   | TmTail of ty * term
   | TmUnit
+(*Se ha añadido los términos TmPrtNat, TmPrtStr, TmPrtStr, TmRdNat, TmRdStr para
+el desarrollo del apartado 2.10*)
   | TmPrtNat of term
   | TmPrtStr of term
   | TmRdNat of term

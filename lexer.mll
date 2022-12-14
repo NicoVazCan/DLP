@@ -48,15 +48,16 @@ de identificar las concatenaciones del apartado 2.3*)
   | '^'         { STRCAT }
   | '('         { LPAREN }
   | ')'         { RPAREN }
-(*Se han añadido los operadores "LBRACE", "RBRACE", "LBRACK",
+(*Se han añadido los tokens "LBRACE", "RBRACE", "LBRACK",
 "RBRACK", "NIL", "CONS", "ISNIL", "HEAD", "TAIL", "LIST"
 en el lexer con el fin de identificar los caracteres de las
 listas del apartado 2.7*)
   | '{'         { LBRACE }
   | '}'         { RBRACE }
-(*Se han añadido los operadores "LBRACK", "RBRACK" y "COMMA" 
-en el lexer con el fin de identificar los caracteres de los
-pares, tuplas y registros de los apartados 2.4, 2.5 y 2.6*)
+(*Se han añadido los tokens "LBRACK", "RBRACK" y "COMMA" 
+en el lexer con el fin de identificar el inicio y fin, y cada
+miembro de los pares, tuplas y registros de los apartados
+2.4, 2.5 y 2.6*)
   | '['         { LBRACK }
   | ']'         { RBRACK }
   | "nil"       { NIL }
@@ -67,6 +68,9 @@ pares, tuplas y registros de los apartados 2.4, 2.5 y 2.6*)
   | "List"      { LIST }
   | "unit"      { UNIT }
   | "Unit"      { UNIT_TY }
+(*Se han añadido los operadores "P_NAT", "P_STRING",
+"R_NAT", y "R_STRING" en el lexer con el fin de
+identificarlos*)
   | "print_nat" { P_NAT }
   | "print_string"
                 { P_STRING }
