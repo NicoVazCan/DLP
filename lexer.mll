@@ -34,6 +34,8 @@ rule token = parse
   | "pred"      { PRED }
   | "iszero"    { ISZERO }
   | "let"       { LET }
+(*Se ha añadido la palabra "letrec" en el lexer con el fin
+de identificar las expresiones recursivas del apartado 2.1*)
   | "letrec"    { LETREC }
   | "in"        { IN }
   | "Bool"      { BOOL }

@@ -27,6 +27,7 @@ type term =
   | TmAbs of string * ty * term
   | TmApp of term * term
   | TmLetIn of string * term * term
+(*Se ha añadido el tipo Fix para el apartado 2.1*)
   | TmFix of term
   | TmStr of string
   | TmStrCat of term * term
@@ -206,6 +207,8 @@ let rec typeof tctx tm =
       let tctx' = addtbinding tctx x tyT1 in
       typeof tctx' t2
 
+(*Se ha añadido la capacidad de matchear con Fix a la función 
+typeof para el apartado 2.1*)
     (* T-Fix *)
   | TmFix t1 ->
       let tyT1 = typeof tctx t1 in
@@ -351,6 +354,8 @@ let rec string_of_term = function
       "(" ^ string_of_term t1 ^ " " ^ string_of_term t2 ^ ")"
   | TmLetIn (s, t1, t2) ->
       "let " ^ s ^ " = " ^ string_of_term t1 ^ " in " ^ string_of_term t2
+(*Se ha añadido la posibilidad de trabajar con Fix a string_of_term
+para el desarrollo del apartado 2.1*)  
   | TmFix t ->
       "(fix " ^ string_of_term t ^ ")"
   | TmStr s ->
@@ -440,6 +445,8 @@ let rec free_vars tm = match tm with
       lunion (free_vars t1) (free_vars t2)
   | TmLetIn (s, t1, t2) ->
       lunion (ldif (free_vars t2) [s]) (free_vars t1)
+(*Se ha añadido la posibilidad de trabajar con Fix a free_vars
+para el desarrollo del apartado 2.1*) 
   | TmFix t ->
       free_vars t
   | TmStr s ->
@@ -510,6 +517,8 @@ let rec subst x s tm = match tm with
            then TmLetIn (y, subst x s t1, subst x s t2)
            else let z = fresh_name y (free_vars t2 @ fvs) in
                 TmLetIn (z, subst x s t1, subst x s (subst y (TmVar z) t2))
+(*Se ha añadido la posibilidad de trabajar con Fix a subst
+para el desarrollo del apartado 2.1*) 
   | TmFix t ->
       TmFix (subst x s t)
   | TmStr st ->
@@ -634,6 +643,10 @@ let rec eval1 vctx tm = match tm with
       let t1' = eval1 vctx t1 in
       TmLetIn (x, t1', t2) 
 
+(*Se ha añadido la posibilidad de trabajar con Fix a eval1
+para el desarrollo del apartado 2.1. Se han implementado dos
+posibilidades, una para trabajar con abstracciones y otra para
+aplicar el Fix*)
     (* E-FixBeta *)
   | TmFix (TmAbs (x, _, t12)) ->
       subst x tm t12 

@@ -25,6 +25,7 @@ type term =
   | TmAbs of string * ty * term
   | TmApp of term * term
   | TmLetIn of string * term * term
+(*Se ha añadido el tipo Fix para el desarrollo del apartado 2.1*)
   | TmFix of term
   | TmStr of string
   | TmStrCat of term * term

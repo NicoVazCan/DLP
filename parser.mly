@@ -13,6 +13,8 @@
 %token PRED
 %token ISZERO
 %token LET
+(*Se ha añadido el token "LETREC" con el fin de identificar
+las expresiones recursivas del apartado 2.1*)
 %token LETREC
 %token IN
 %token BOOL
@@ -76,7 +78,8 @@ term :
       { TmAbs ($2, $4, $6) }
   | LET STRINGV EQ term IN term
       { TmLetIn ($2, $4, $6) }
-
+(*Se ha añadido esta sintxis para el funcionamiento del
+apartado 2.1, para adaptar Fix al lenguaje tipado*)
   | LETREC STRINGV COLON ty EQ term IN term
       { TmLetIn ($2, TmFix (TmAbs ($2, $4, $6)), $8) }
 
